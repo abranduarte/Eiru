@@ -1580,7 +1580,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   let baseLayers = [];
   const ATTR = {
     sat: 'Imágenes © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics',
-    map: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    map: 'Mapa © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>, HERE, Garmin, © OpenStreetMap',
     none: 'Grilla geográfica'
   };
   function setBase(b) {
@@ -1590,7 +1590,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       baseLayers.push(map.addLayer({ id: 'esri', zIndex: 0, maxNative: 18, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}` }));
       baseLayers.push(map.addLayer({ id: 'esri-lbl', zIndex: 5, maxNative: 18, opacity: 0.95, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/${z}/${y}/${x}` }));
     } else if (b === 'map') {
-      baseLayers.push(map.addLayer({ id: 'carto', zIndex: 0, maxNative: 18, url: (z, x, y) => `https://${'abcd'[(x + y) % 4]}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png` }));
+      baseLayers.push(map.addLayer({ id: 'esri-street', zIndex: 0, maxNative: 18, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}` }));
     }
     $$('.basemap button').forEach(x => x.classList.toggle('on', x.dataset.base === b));
     updateAttribution();
