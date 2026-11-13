@@ -1650,7 +1650,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     }
     return s + fmt(av, d);
   }
-  function fmtP(p) { if (p == null || !isFinite(p)) return '—'; if (p < 0.001) return '< 0,001'; return fmt(p, p < 0.01 ? 3 : 2); }
+  function fmtP(p) { if (p == null || !isFinite(p)) return '—'; if (p < 0.001) return '< 0,001'; return fmt(p, p < 0.1 ? 3 : 2); }
   function pStr(p) { const s = fmtP(p); return s.startsWith('<') ? 'p ' + s : 'p = ' + s; }
   function coordTxt(lat, lon) { return `${fmt(Math.abs(lat), 3)}° ${lat < 0 ? 'S' : 'N'}, ${fmt(Math.abs(lon), 3)}° ${lon < 0 ? 'O' : 'E'}`; }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
