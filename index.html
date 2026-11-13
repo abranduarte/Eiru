@@ -47,6 +47,7 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--forest-2); }
 h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 650; letter-spacing: -.01em; margin: 0; line-height: 1.2; }
+[hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- encabezado ---------- */
@@ -209,6 +210,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 650; letter-spac
 .vcard .nm { font-weight: 650; font-size: 14px; }
 .vcard .val { font-size: 12.5px; color: var(--muted); }
 .vcard .val .pv { white-space: nowrap; }
+.vcard .val .mg { display: block; font-size: 11.5px; }
 @media (max-width: 520px) { .vcard .val .pv { display: block; } .vcard .val .dot { display: none; } .vcard .spark { width: 72px; } }
 .vcard .val b { color: var(--ink); }
 .vcard .right { grid-row: span 2; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -338,6 +340,45 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
+/* ---------- leyenda de escala ---------- */
+.geo-legend { position: absolute; left: 12px; bottom: 26px; z-index: 9; background: var(--paper); border-radius: 12px; box-shadow: var(--shadow); max-width: 290px; font-size: 12px; overflow: hidden; }
+.gl-head { border: 0; background: none; padding: 8px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; color: var(--forest); width: 100%; text-align: left; }
+.gl-body { padding: 0 12px 10px; }
+.gl-row { display: flex; gap: 8px; align-items: flex-start; margin: 5px 0; }
+.gl-row svg, .gl-row .sw { flex: none; margin-top: 1px; }
+.sw { width: 16px; height: 13px; display: inline-block; border-radius: 2px; }
+.sw.a { border: 2.5px dashed var(--honey); background: rgba(233, 163, 24, .15); }
+.sw.b { border: 2.5px dashed var(--sky); background: rgba(47, 111, 163, .15); }
+.gl-body p { margin: 6px 0 0; color: var(--muted); font-size: 11.5px; }
+.map-note { bottom: 74px; }
+.mm-rect.selB { fill: rgba(47, 111, 163, .12); stroke: var(--sky); stroke-width: 3; stroke-dasharray: 7 5; }
+
+/* ---------- comparar ---------- */
+.cmp-places { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.cmp-place { border-radius: 12px; padding: 9px 11px; border: 1.5px solid; background: #fff; display: flex; flex-direction: column; gap: 1px; font-size: 14px; }
+.cmp-place.a { border-color: var(--honey); }
+.cmp-place.b { border-color: var(--sky); }
+.cmp-place .eyebrow { font-size: 10.5px; }
+.cmp-place.b .eyebrow { color: var(--sky); }
+.cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 12px; font-size: 12.5px; }
+.cmp-table th { text-align: left; font-size: 11px; color: var(--muted); font-weight: 700; padding: 8px 9px; background: #fbf7ee; border-bottom: 1px solid var(--line); }
+.cmp-table td { padding: 8px 9px; border-bottom: 1px dashed var(--line); vertical-align: top; }
+.cmp-table tr:last-child td { border-bottom: 0; }
+.cmp-table tr { cursor: pointer; }
+.cmp-table tr.on td { background: var(--honey-soft); }
+.cmp-table .vn { font-weight: 650; }
+.cmp-table .mu { color: var(--muted); font-size: 11px; display: block; }
+.cmp-table .tr { font-weight: 650; white-space: nowrap; }
+.sigdot { display: inline-block; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 6px; margin-left: 3px; vertical-align: 1px; }
+.sigdot.s { background: #e5f1e9; color: #22613d; }
+.sigdot.w { background: #f6ead0; color: #7a5506; }
+.sigdot.n { background: #eceeea; color: #6b716c; }
+.pin.b path { fill: #2f6fa3; }
+@media (max-width: 900px) {
+  .geo-legend { left: 8px; bottom: 22px; max-width: min(260px, 62vw); }
+  .gl-head { padding: 7px 10px; font-size: 11.5px; }
+}
+
 </style>
 </head>
 <body>
@@ -374,6 +415,15 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
     <div class="map-hint" id="mapHint">Tocá el mapa para elegir un lugar</div>
     <div class="map-note" id="mapNote" hidden></div>
     <div class="legend" id="legend" hidden></div>
+    <div class="geo-legend" id="geoLegend">
+      <button class="gl-head" id="glToggle" aria-expanded="false">ⓘ ¿Qué es el recuadro?</button>
+      <div class="gl-body" id="glBody" hidden>
+        <div class="gl-row"><svg width="16" height="20" viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39s13-14.2 13-24A13 13 0 0 0 2 15c0 9.8 13 24 13 24z" fill="#e9a318" stroke="#183f30" stroke-width="2.5"/></svg><span><b>Punto elegido</b>: la coordenada exacta.</span></div>
+        <div class="gl-row"><i class="sw a"></i><span><b>Área que representan los datos</b>: celda NASA de ~55 × 63 km.</span></div>
+        <div class="gl-row" id="glB" hidden><i class="sw b"></i><span><b>Lugar B</b> de la comparación.</span></div>
+        <p>El dato describe toda la celda. Por eso, cerca de la Triple Frontera incluye parte de Brasil y Argentina. Eiru no la recorta al municipio para no aparentar más precisión de la que existe.</p>
+      </div>
+    </div>
   </section>
 
   <aside class="panel">
@@ -398,6 +448,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
     <nav class="tabs" role="tablist">
       <button class="tab on" data-tab="detector" role="tab">Detector</button>
       <button class="tab" data-tab="variable" role="tab">Variable</button>
+      <button class="tab" data-tab="comparar" role="tab">Comparar</button>
       <button class="tab" data-tab="donde" role="tab">¿Dónde?</button>
       <button class="tab" data-tab="comunidad" role="tab">Comunidad</button>
       <button class="tab" data-tab="metodo" role="tab">Método</button>
@@ -421,6 +472,19 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
           <label class="field" style="flex:1">Variable<select id="varSel"></select></label>
         </div>
         <div id="varOut"><p class="lead" style="margin-top:12px">Primero tocá <b>Detectar cambios</b>.</p></div>
+      </section>
+
+      <!-- COMPARAR -->
+      <section class="pane" id="pane-comparar">
+        <h3>Comparar dos regiones</h3>
+        <p class="lead">La misma variable puede subir en un lugar y bajar en otro, aunque la impulse el mismo proceso. Compará el lugar elegido (A) con otro (B) en el mismo período.</p>
+        <div class="cmp-places">
+          <div class="cmp-place a"><span class="eyebrow">Lugar A</span><b id="cmpAName">—</b></div>
+          <div class="cmp-place b"><span class="eyebrow">Lugar B</span><b id="cmpBName">Elegí un lugar</b></div>
+        </div>
+        <div class="chips" id="cmpPresets"></div>
+        <div class="actions" style="margin-top:8px"><button class="btn small" id="cmpPick">📍 Elegir B en el mapa</button><button class="btn small ghost" id="cmpClear" hidden>Quitar comparación</button></div>
+        <div id="cmpOut"></div>
       </section>
 
       <!-- DONDE -->
@@ -489,9 +553,11 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
   <li>Mide <b>cuánto</b> cambia con la <b>pendiente de Sen</b>: la mediana de todas las pendientes entre pares de años. Un año extremo no la distorsiona. Se muestra por década, con su intervalo de confianza del 95 %.</li>
   <li>Corrige la <b>autocorrelación</b> (años parecidos a los anteriores) con el método de <b>Hamed y Rao (1998)</b>, para no exagerar la significancia.</li>
   <li>Repite el análisis <b>mes por mes</b> para ver en qué época del año se concentra el cambio.</li>
-  <li>En el mapa de "¿Dónde?", aplica la corrección de <b>Benjamini-Hochberg</b>: al probar muchas celdas, algunas saldrían "significativas" por azar.</li>
+  <li>Corrige por <b>comparaciones múltiples</b> con el método de <b>Benjamini-Hochberg</b>. Al revisar 8 variables a la vez, o muchas celdas en el mapa de "¿Dónde?", alguna podría salir "significativa" por azar. Eiru muestra el valor p original y el <b>ajustado</b>, y solo llama <b>significativo</b> a lo que supera la corrección.</li>
+  <li>Separa la <b>significancia</b> de la <b>magnitud práctica</b>: compara el cambio total con la variación normal de un año a otro (el desvío de los residuos sin tendencia). Si el cambio es menor a 0,5 veces esa variación, la magnitud es pequeña; entre 0,5 y 1, moderada; entre 1 y 2, grande; y más de 2, muy grande. Un cambio puede ser significativo pero pequeño, o grande pero todavía incierto.</li>
+  <li>En <b>Comparar</b>, aplica exactamente el mismo período y método a dos lugares, para detectar tendencias opuestas o patrones regionales.</li>
 </ol>
-<div class="explain"><b>¿Qué es el valor p?</b> Si en realidad no hubiera ninguna tendencia, el valor p es la probabilidad de ver un patrón igual de fuerte por puro azar. Eiru llama <b>significativo</b> a p &lt; 0,05 (menos de 5 %) e <b>indicio débil</b> a p entre 0,05 y 0,10.</div>
+<div class="explain"><b>¿Qué es el valor p?</b> Si en realidad no hubiera ninguna tendencia, el valor p es la probabilidad de ver un patrón igual de fuerte (o más) por puro azar. <b>No</b> es la probabilidad de que "no haya cambio". Eiru llama <b>significativo</b> a un valor p ajustado menor a 0,05, e <b>indicio</b> a un valor p original menor a 0,10 que no supera la corrección.</div>
 
 <h4>3. Cuatro niveles de información</h4>
 <p>Eiru no mezcla lo que alguien vio con lo que se midió o se supone:</p>
@@ -505,14 +571,25 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 
 <h4>4. Límites</h4>
 <ul>
-  <li>Una celda de ~55 km no describe un árbol, un lote ni un barrio.</li>
+  <li>Una celda de ~55 km no describe un árbol, un lote ni un barrio. Cerca de la Triple Frontera, la celda incluye parte de Brasil y Argentina. Eiru la muestra completa en lugar de recortarla, para no aparentar una precisión municipal que el dato no tiene.</li>
+  <li>Una tendencia histórica no es un pronóstico: no se debe extrapolar al futuro.</li>
   <li>MERRA-2 es un reanálisis (un modelo que combina observaciones): puede diferir de una estación local.</li>
   <li>Con menos de 10 años, la prueba pierde potencia. Se recomiendan 30 años o más.</li>
   <li>Que no haya una tendencia significativa no prueba que no haya cambio: puede que todavía no se distinga del ruido.</li>
   <li>Pocas observaciones comunitarias en una zona pueden significar que hay pocos observadores, no pocas especies.</li>
 </ul>
 
-<h4>5. Sobre Eiru</h4>
+<h4>5. Visión futura</h4>
+<p>El prototipo se concentra en una sola historia completa y verificable: detectar tendencias con rigor. A partir de ahí, Eiru puede crecer por etapas:</p>
+<ul>
+  <li><b>Más resolución donde haga falta:</b> lluvia con <b>GPM IMERG</b> (~0,1°), vegetación con <b>MODIS</b> (250 m – 1 km), y <b>Landsat</b> (30 m) o <b>Sentinel-2</b> (10 m) para coberturas y parcelas. Cada capa con su escala real.</li>
+  <li><b>Resumen por territorio:</b> estadísticas sobre el límite de un municipio o una microcuenca, sin confundirlo con la celda de datos.</li>
+  <li><b>Eiru Agro:</b> historial privado de cada parcela (zafra y zafriña), calendario de siembra, rotaciones y cultivos de cobertura. Compara alternativas con criterios transparentes, sin prometer rendimientos ni reemplazar al ingeniero agrónomo.</li>
+  <li><b>Análogos climáticos:</b> buscar campañas o regiones con condiciones parecidas usando varias variables a la vez, y mostrar en qué se parecen y en qué difieren.</li>
+  <li><b>Memoria viva:</b> árboles con nombre, un QR y un seguimiento verificado; registro de polinizadores; reportes de plagas con enfoque de Manejo Integrado de Plagas; y focos de calor satelitales, siempre separando lo confirmado de lo hipotético.</li>
+</ul>
+
+<h4>6. Sobre Eiru</h4>
 <p><b>Eiru</b> viene del guaraní <i>eiru</i>, la abeja: un símbolo de que las especies dependen unas de otras. La espiral del logo representa un crecimiento que vuelve cerca de su origen, pero en otro nivel. Eiru quiere ser una memoria viva de los ecosistemas: unir la escala humana (un lapacho llamado <i>Goku</i> que alguien cuida por diez años) con la escala del planeta.</p>
 <p class="motto">Sembramos conocimiento. Cultivamos futuro.</p>
 <p class="foot">Proyecto de Abrahan Duarte · NASA Space Apps Challenge 2026 · Ciudad del Este, Paraguay.<br>
@@ -667,6 +744,21 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     return res;
   }
 
+  /** Valores p ajustados por Benjamini-Hochberg (q). */
+  function fdrAdjust(pvals) {
+    const m = pvals.length;
+    const order = pvals.map((p, i) => [p, i]).sort((a, b) => a[0] - b[0]);
+    const q = new Array(m);
+    let run = 1;
+    for (let k = m - 1; k >= 0; k--) {
+      run = Math.min(run, order[k][0] * m / (k + 1));
+      q[order[k][1]] = Math.min(1, run);
+    }
+    return q;
+  }
+
+  function sd(arr) { const m = mean(arr); let s = 0; for (const v of arr) s += (v - m) ** 2; return arr.length > 1 ? Math.sqrt(s / (arr.length - 1)) : NaN; }
+
   function linreg(t, x) {
     const T = [], X = [];
     t.forEach((v, i) => { if (x[i] != null && isFinite(x[i])) { T.push(v); X.push(x[i]); } });
@@ -677,7 +769,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     return { slope: b, intercept: mx - b * mt };
   }
 
-  const api = { mannKendall, senSlope, fdr, normCdf, median, mean, ranks, acf, linreg };
+  const api = { mannKendall, senSlope, fdr, fdrAdjust, sd, normCdf, median, mean, ranks, acf, linreg };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.EiruStats = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -1525,7 +1617,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     res: null, varSel: 'T2M', chartMode: 'annual',
     grid: null, base: 'sat', ndvi: null,
     obs: [], draft: null, placing: false,
-    tab: 'detector', runToken: 0, gridToken: 0
+    tab: 'detector', runToken: 0, gridToken: 0, cmp: null, cmpVar: 'T2M', cmpToken: 0
   };
 
   /* ================= utilidades UI ================= */
@@ -1615,13 +1707,18 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
 
   const PIN = `<svg class="pin" width="30" height="40" viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39s13-14.2 13-24A13 13 0 0 0 2 15c0 9.8 13 24 13 24z" fill="#e9a318" stroke="#183f30" stroke-width="2"/><circle cx="15" cy="15" r="5.2" fill="#183f30"/></svg>`;
 
+  const PIN_B = PIN.replace('class="pin"', 'class="pin b"').replace('fill="#e9a318"', 'fill="#2f6fa3"');
   function refreshMap() {
     const f = [];
     if (state.grid && state.grid.cells) {
       for (const c of state.grid.cells) f.push(c.feature);
     }
     const cell = D.snapCell(state.place.lat, state.place.lon);
-    f.push({ type: 'rect', s: cell.s, n: cell.n, w: cell.w, e: cell.e, cls: 'sel', title: 'Celda de datos NASA POWER (~55 × 63 km)' });
+    f.push({ type: 'rect', s: cell.s, n: cell.n, w: cell.w, e: cell.e, cls: 'sel', title: 'Área que representan los datos (celda NASA POWER ~55 × 63 km)' });
+    if (state.cmp) {
+      const cb = D.snapCell(state.cmp.place.lat, state.cmp.place.lon);
+      f.push({ type: 'rect', s: cb.s, n: cb.n, w: cb.w, e: cb.e, cls: 'selB', title: 'Área de datos del lugar B' });
+    }
     for (const o of state.obs) {
       const t = TYPES[o.type] || TYPES.arbol;
       f.push({ type: 'marker', lat: o.lat, lon: o.lon, cls: '', title: `${t.label}: ${o.name || ''}`, html: `<span class="obs-pin ${o.example ? 'example' : ''}" style="--c:${t.color}">${t.icon}</span>`, onClick: () => openObsPopup(o) });
@@ -1629,13 +1726,19 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     if (state.draft && state.draft.lat != null) {
       f.push({ type: 'marker', lat: state.draft.lat, lon: state.draft.lon, title: 'Nueva observación', html: `<span class="obs-pin" style="--c:#183f30;box-shadow:inset 0 0 0 3px #e9a318">＋</span>` });
     }
+    if (state.cmp) f.push({ type: 'marker', lat: state.cmp.place.lat, lon: state.cmp.place.lon, title: 'Lugar B: ' + state.cmp.place.name, html: PIN_B, onClick: () => goTab('comparar') });
     f.push({ type: 'marker', lat: state.place.lat, lon: state.place.lon, title: state.place.name, html: PIN, onClick: () => map.openPopup(state.place.lat, state.place.lon, `<h5>${esc(state.place.name)}</h5><div class="pp-meta">${coordTxt(state.place.lat, state.place.lon)}</div><div>El recuadro punteado es la celda de datos de la NASA que se analiza (~55 × 63 km).</div>`) });
     map.setFeatures(f);
   }
   map.on('move', () => { /* las capas se redibujan solas */ });
   map.on('click', (ll) => {
     map.closePopup();
-    if (state.placing && state.draft) {
+    if (state.placing === 'cmp') {
+      state.placing = false; setHint();
+      setCompare(ll.lat, ll.lon, 'Punto B en el mapa');
+      return;
+    }
+    if (state.placing === 'obs' && state.draft) {
       state.draft.lat = +ll.lat.toFixed(5); state.draft.lon = +ll.lon.toFixed(5);
       state.placing = false; setHint();
       renderObsForm(); refreshMap();
@@ -1646,7 +1749,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   });
   function setHint() {
     const h = $('#mapHint');
-    if (state.placing) { h.textContent = 'Tocá el mapa para ubicar la observación'; h.classList.add('placing'); h.style.opacity = 1; }
+    if (state.placing) { h.textContent = state.placing === 'cmp' ? 'Tocá el mapa para elegir el lugar B' : 'Tocá el mapa para ubicar la observación'; h.classList.add('placing'); h.style.opacity = 1; }
     else { h.classList.remove('placing'); h.textContent = 'Tocá el mapa para elegir un lugar'; h.style.opacity = state.res ? 0 : 1; }
   }
 
@@ -1660,6 +1763,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     $('#placeName').textContent = state.place.name;
     $('#placeMeta').innerHTML = `${coordTxt(state.place.lat, state.place.lon)} · celda NASA <b>${coordTxt(c.lat, c.lon)}</b> (~55 × 63 km)`;
     renderPresets();
+    if (typeof renderCmpHeader === 'function' && $('#cmpAName')) renderCmpHeader();
   }
   function setPlace(lat, lon, name, opts) {
     opts = opts || {};
@@ -1738,9 +1842,21 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       const span = valid.length ? valid[valid.length - 1][0] - valid[0][0] : 0;
       const meanAll = St.mean(valid.map(p => p[1]));
       const total = mk.slope * span;
-      const status = !mk.valid ? 'none' : mk.p < 0.05 ? 'sig' : mk.p < 0.10 ? 'weak' : 'none';
-      out[P] = { mk, months, decades, span, meanAll, total, pct: meanAll ? total / Math.abs(meanAll) * 100 : NaN, status, dir: Math.sign(mk.slope) || 0, firstY: valid.length ? valid[0][0] : null, lastY: valid.length ? valid[valid.length - 1][0] : null };
+      // magnitud práctica: cambio total frente a la variación normal entre años (residuos sin tendencia)
+      const resid = valid.map(([y, v]) => v - (mk.intercept + mk.slope * y));
+      const noise = St.sd(resid);
+      const snr = noise > 0 ? Math.abs(total) / noise : NaN;
+      const mag = !isFinite(snr) ? '—' : snr < 0.5 ? 'pequeña' : snr < 1 ? 'moderada' : snr < 2 ? 'grande' : 'muy grande';
+      out[P] = { mk, months, decades, span, meanAll, total, noise, snr, mag, pct: meanAll ? total / Math.abs(meanAll) * 100 : NaN, dir: Math.sign(mk.slope) || 0, firstY: valid.length ? valid[0][0] : null, lastY: valid.length ? valid[valid.length - 1][0] : null };
     }
+    // corrección por comparaciones múltiples entre las variables (Benjamini-Hochberg)
+    const keys = D.VAR_KEYS;
+    const q = St.fdrAdjust(keys.map(P => out[P].mk.valid ? out[P].mk.p : 1));
+    keys.forEach((P, i) => {
+      const a = out[P]; a.q = q[i];
+      a.status = !a.mk.valid ? 'none' : a.q < 0.05 ? 'sig' : a.mk.p < 0.10 ? 'weak' : 'none';
+      a.weakCorr = a.status === 'weak' && a.mk.p < 0.05; // significativo sin corregir, no tras la corrección
+    });
     return out;
   }
 
@@ -1759,6 +1875,8 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       renderVariable();
       renderObsList();
       setHint();
+      renderCmpHeader();
+      if (state.cmp) runCompare();
     } catch (err) {
       console.error(err);
       if (token !== state.runToken) return;
@@ -1789,7 +1907,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     const samePlace = r.place.lat === state.place.lat && r.place.lon === state.place.lon;
     const modeTxt = { live: 'NASA POWER (en vivo)', cache: 'NASA POWER (guardado en este dispositivo)', demo: 'SIMULADOS (modo demostración)' }[r.mode];
     let html = `<div class="summary"><div class="big">${nsig === 0 ? 'No se detectan cambios significativos' : `${nsig} de ${D.VAR_KEYS.length} variables cambian de forma significativa`}</div>
-      <div class="small">${esc(r.place.name)} · ${r.y0}–${r.y1}${nweak ? ` · ${nweak} con indicio débil` : ''}<br>Datos: ${modeTxt}</div></div>`;
+      <div class="small">${esc(r.place.name)} · ${r.y0}–${r.y1}${nweak ? ` · ${nweak} con indicio débil` : ''}<br>Datos: ${modeTxt}<br>Significancia corregida por analizar 8 variables a la vez (Benjamini-Hochberg).</div></div>`;
     if (!samePlace) html += `<div class="banner info"><span>ℹ️</span><div>El punto elegido está en la misma celda de datos que el análisis anterior, así que los resultados son los mismos.</div></div>`;
     html += `<div class="cards">`;
     for (const P of order) {
@@ -1801,7 +1919,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
         <span class="ic" aria-hidden="true">${v.icon}</span>
         <span class="nm">${esc(v.name)}</span>
         <span class="right">${badgeFor(P, a)}${Ch.sparkline(d.annual, col, a.status !== 'none' ? tr : null)}</span>
-        <span class="val"><b>${perDecadeTxt(P, a.mk.slope)}</b> <span class="pv"><span class="dot">· </span>${pStr(a.mk.p)}</span></span>
+        <span class="val"><b>${perDecadeTxt(P, a.mk.slope)}</b> <span class="pv"><span class="dot">· </span>${pStr(a.mk.p)} · ajust. ${fmtP(a.q)}</span><span class="mg">Magnitud ${a.mag}</span></span>
       </button>`;
     }
     html += `</div>`;
@@ -1828,7 +1946,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     sigs.forEach(P => {
       const a = an[P], v = D.VARIABLES[P];
       const ms = a.months.map((m, i) => m.p < 0.05 && Math.sign(m.slope) === a.dir ? MONTHS_L[i] : null).filter(Boolean);
-      items.push(['lvl3', 'Nivel 3 · Patrón', `<b>${v.name}</b>: tendencia ${a.dir > 0 ? 'creciente' : 'decreciente'} de ${perDecadeTxt(P, a.mk.slope)} (Mann-Kendall, ${pStr(a.mk.p)}).${ms.length ? (ms.length > 4 ? ' El cambio se nota en casi todo el año.' : ` El cambio se nota sobre todo en ${listJoin(ms)}.`) : ''}`]);
+      items.push(['lvl3', 'Nivel 3 · Patrón', `<b>${v.name}</b>: tendencia ${a.dir > 0 ? 'creciente' : 'decreciente'} de ${perDecadeTxt(P, a.mk.slope)} (Mann-Kendall, ${pStr(a.mk.p)}, ajustado ${fmtP(a.q)}; magnitud ${a.mag} frente a la variación normal entre años).${ms.length ? (ms.length > 4 ? ' El cambio se nota en casi todo el año.' : ` El cambio se nota sobre todo en ${listJoin(ms)}.`) : ''}`]);
     });
     if (!sigs.length) items.push(['lvl3', 'Nivel 3 · Patrón', 'Ninguna variable muestra una tendencia significativa en este período. Eso no prueba que no haya cambio: puede que todavía no se distinga de la variación natural de un año a otro.']);
     // Nivel 4: hipótesis
@@ -1867,12 +1985,17 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     const d = r.series.params[P];
     const vcls = a.status;
     const vIcon = a.status === 'sig' ? '✅' : a.status === 'weak' ? '🟡' : '➖';
-    const vTitle = a.status === 'sig' ? `Cambio significativo: ${a.dir > 0 ? pal.posW : pal.negW}` : a.status === 'weak' ? 'Indicio débil: todavía no es concluyente' : 'Sin tendencia significativa';
+    const vTitle = a.status === 'sig' ? `Cambio significativo: ${a.dir > 0 ? pal.posW : pal.negW}` : a.weakCorr ? 'Indicio: significativo solo sin la corrección' : a.status === 'weak' ? 'Indicio débil: todavía no es concluyente' : 'Sin tendencia significativa';
     const pPct = mk.p * 100;
     const pTxt = mk.p < 0.001 ? 'menos de 0,1 %' : `${fmt(pPct, pPct < 1 ? 2 : pPct < 10 ? 1 : 0)} %`;
+    const qPct = a.q * 100;
+    const qTxt = a.q < 0.001 ? 'menos de 0,1 %' : `${fmt(qPct, qPct < 1 ? 2 : qPct < 10 ? 1 : 0)} %`;
     const explain = a.status === 'sig'
-      ? `Si en realidad no hubiera ninguna tendencia, la probabilidad de ver un patrón así de fuerte por puro azar sería de <b>${pTxt}</b>. Como es menor a 5 %, Eiru considera que el cambio es <b>significativo</b>.`
-      : `Si no hubiera ninguna tendencia, un patrón así podría aparecer por azar con una probabilidad de <b>${pTxt}</b>. Es demasiado alta para afirmar que hay un cambio real: hacen falta más años o la variación natural es grande.`;
+      ? `Si en realidad no hubiera ninguna tendencia, la probabilidad de ver un patrón así de fuerte por puro azar sería de <b>${pTxt}</b>. Como Eiru revisa 8 variables a la vez, también corrige ese valor (ajustado: <b>${qTxt}</b>). Sigue siendo menor a 5 %, así que el cambio se considera <b>significativo</b>.`
+      : a.weakCorr
+        ? `Si no hubiera ninguna tendencia, un patrón así aparecería por azar con una probabilidad de <b>${pTxt}</b>. Pero al revisar 8 variables a la vez, alguna podría salir "significativa" por suerte; con la corrección queda en <b>${qTxt}</b>, por encima de 5 %. Por eso es un <b>indicio</b>, no una conclusión.`
+        : `Si no hubiera ninguna tendencia, un patrón así podría aparecer por azar con una probabilidad de <b>${pTxt}</b>. Es demasiado alta para afirmar que hay un cambio real: hacen falta más años o la variación natural es grande.`;
+    const magTxt = !isFinite(a.snr) ? 'No se pudo calcular.' : `El cambio total equivale a <b>${fmt(a.snr, 1)} veces</b> la variación normal de un año a otro (±${fmt(a.noise, dec(P, 1))} ${unitAnnual(P)}).`;
     const sigMonths = a.months.map((m, i) => m.p < 0.05 ? i : -1).filter(i => i >= 0);
     $('#varOut').innerHTML = `
       ${r.mode === 'demo' ? '<div class="banner demo" style="margin-top:12px"><span>⚠️</span><div><b>Datos simulados</b>Solo para demostración.</div></div>' : ''}
@@ -1881,7 +2004,8 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
         <div class="stat"><div class="k">¿Cuánto? (por década)</div><div class="v" style="color:${a.status === 'none' ? 'inherit' : (a.dir > 0 ? pal.pos : pal.neg)}">${signed(mk.slope * 10, dec(P, 1))}</div><div class="s">${unitAnnual(P)} · IC 95 %: ${signed(mk.lo * 10, dec(P, 1))} a ${signed(mk.hi * 10, dec(P, 1))}</div></div>
         <div class="stat"><div class="k">Cambio total ${a.firstY ?? ''}–${a.lastY ?? ''}</div><div class="v">${signed(a.total, dec(P, 1))}</div><div class="s">${unitAnnual(P)}${isFinite(a.pct) && v.unit !== '°C' && !v.unit.startsWith('%') ? ` · ${signed(a.pct, 1)} %` : ''}</div></div>
         <div class="stat wide"><div class="k">Antes y después (promedios)</div><div class="v">${fmt(a.decades.a, dec(P, 1))} → ${fmt(a.decades.b, dec(P, 1))} <span style="font-size:13px;font-family:var(--font-body);color:var(--muted)">${unitAnnual(P)}</span></div><div class="s">${a.decades.aLbl} comparado con ${a.decades.bLbl}</div></div>
-        <div class="stat wide"><div class="k">¿Es significativo?</div><div class="v">${pStr(mk.p)}</div><div class="s">Mann-Kendall · Z = ${fmt(mk.Z, 2)} · τ = ${fmt(mk.tau, 2)}${mk.autocorr ? ' · corregido por autocorrelación' : ''}</div></div>
+        <div class="stat"><div class="k">¿Es significativo?</div><div class="v">${pStr(mk.p)}</div><div class="s">ajustado por 8 variables: ${fmtP(a.q)}<br>Mann-Kendall · Z = ${fmt(mk.Z, 2)}${mk.autocorr ? ' · corregido por autocorrelación' : ''}</div></div>
+        <div class="stat"><div class="k">¿Importa en la práctica?</div><div class="v">Magnitud ${a.mag}</div><div class="s">${magTxt}</div></div>
       </div>
       <div class="row"><h4 style="margin:6px 0">${v.icon} ${esc(v.name)}</h4>
         <div class="seg" role="group"><button data-cm="annual" class="${state.chartMode === 'annual' ? 'on' : ''}">Anual</button><button data-cm="monthly" class="${state.chartMode === 'monthly' ? 'on' : ''}">Mensual</button></div></div>
@@ -2202,7 +2326,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       sync();
       try { d.photo = await shrink(file, 480); renderObsForm(); } catch (e) { toast('No se pudo leer la imagen'); }
     };
-    $('#pickLoc').onclick = () => { sync(); state.placing = true; setHint(); renderObsForm(); if (window.innerWidth <= 900) $('#map').scrollIntoView({ behavior: 'smooth' }); };
+    $('#pickLoc').onclick = () => { sync(); state.placing = 'obs'; setHint(); renderObsForm(); if (window.innerWidth <= 900) $('#map').scrollIntoView({ behavior: 'smooth' }); };
     $('#cancelObs').onclick = () => { state.draft = null; state.placing = false; setHint(); renderObsForm(); refreshMap(); };
     f.onsubmit = (e) => {
       e.preventDefault(); sync();
@@ -2268,8 +2392,121 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       });
   };
 
+  /* ================= Comparar dos regiones ================= */
+  function renderCmpHeader() {
+    $('#cmpAName').textContent = state.place.name;
+    $('#cmpBName').textContent = state.cmp ? state.cmp.place.name : 'Elegí un lugar';
+    $('#cmpClear').hidden = !state.cmp;
+    $('#glB').hidden = !state.cmp;
+    const ca = D.snapCell(state.place.lat, state.place.lon);
+    $('#cmpPresets').innerHTML = PRESETS.map((p, i) => {
+      const c = D.snapCell(p.lat, p.lon);
+      if (c.lat === ca.lat && c.lon === ca.lon) return '';
+      const on = state.cmp && state.cmp.place.name === p.name;
+      return `<button class="chip ${on ? 'on' : ''}" data-i="${i}">${esc(p.name)}</button>`;
+    }).join('');
+    $$('#cmpPresets .chip').forEach(b => b.onclick = () => { const p = PRESETS[+b.dataset.i]; setCompare(p.lat, p.lon, p.name); });
+    if (!state.cmp) $('#cmpOut').innerHTML = '<p class="place-meta" style="margin-top:12px">Sugerencia: compará Ciudad del Este con el Chaco, dos ambientes muy distintos de Paraguay.</p>';
+  }
+  function setCompare(lat, lon, name) {
+    state.cmp = { place: { lat: +lat.toFixed(5), lon: +lon.toFixed(5), name } };
+    renderCmpHeader(); refreshMap(); runCompare();
+    // mostrar A y B en el mapa
+    const ca = D.snapCell(state.place.lat, state.place.lon), cb = D.snapCell(lat, lon);
+    map.fitBounds(Math.min(ca.s, cb.s), Math.min(ca.w, cb.w), Math.max(ca.n, cb.n), Math.max(ca.e, cb.e), 50);
+  }
+  $('#cmpPick').onclick = () => { state.placing = 'cmp'; setHint(); if (window.innerWidth <= 900) $('#map').scrollIntoView({ behavior: 'smooth' }); };
+  $('#cmpClear').onclick = () => { state.cmp = null; renderCmpHeader(); refreshMap(); };
+
+  async function runCompare() {
+    if (!state.cmp || !state.res) return;
+    const token = ++state.cmpToken;
+    $('#cmpOut').innerHTML = `<div class="cards" style="margin-top:12px">${'<div class="skeleton"></div>'.repeat(3)}</div>`;
+    try {
+      const s = await D.getSeries(state.cmp.place.lat, state.cmp.place.lon, D.VAR_KEYS, state.y0, state.y1);
+      if (token !== state.cmpToken || !state.cmp) return;
+      state.cmp.series = s; state.cmp.an = analyse(s); state.cmp.mode = s.mode; state.cmp.cell = s.cell;
+      renderCompare();
+    } catch (e) {
+      if (token === state.cmpToken) $('#cmpOut').innerHTML = `<div class="banner demo" style="margin-top:12px"><span>⚠️</span><div><b>No se pudo comparar</b>${esc(e.message || e)}</div></div>`;
+    }
+  }
+  function sigDot(a) {
+    if (a.status === 'sig') return '<span class="sigdot s">✓ signif.</span>';
+    if (a.status === 'weak') return '<span class="sigdot w">~ indicio</span>';
+    return '<span class="sigdot n">–</span>';
+  }
+  function renderCompare() {
+    const A = state.res, B = state.cmp;
+    if (!A || !B || !B.an) return;
+    const sameCell = A.cell.lat === B.cell.lat && A.cell.lon === B.cell.lon;
+    const demo = A.mode === 'demo' || B.mode === 'demo';
+    const opp = [], both = [], onlyA = [], onlyB = [];
+    D.VAR_KEYS.forEach(P => {
+      const a = A.an[P], b = B.an[P];
+      const sa = a.status === 'sig', sb = b.status === 'sig';
+      if (sa && sb) (a.dir !== b.dir ? opp : both).push(P);
+      else if (sa) onlyA.push(P); else if (sb) onlyB.push(P);
+    });
+    const names = (arr) => listJoin(arr.map(P => D.VARIABLES[P].name.toLowerCase()));
+    const items = [];
+    if (opp.length) items.push(['lvl3', 'Tendencias opuestas', `<b>${names(opp)}</b>: sube en un lugar y baja en el otro. Es justo el caso que plantea el desafío: una misma variable puede cambiar en direcciones opuestas según la región.`]);
+    if (both.length) items.push(['lvl3', 'Cambia en ambos lugares', `<b>${names(both)}</b> cambia en la misma dirección en los dos lugares: sugiere un patrón regional.`]);
+    if (onlyA.length) items.push(['lvl3', `Solo en ${esc(A.place.name)}`, `${names(onlyA)}.`]);
+    if (onlyB.length) items.push(['lvl3', `Solo en ${esc(B.place.name)}`, `${names(onlyB)}.`]);
+    if (!items.length) items.push(['lvl3', 'Patrón', 'Ninguna variable cambia de forma significativa en ninguno de los dos lugares en este período.']);
+    // mayor diferencia de clima promedio (en unidades de variabilidad)
+    let big = null;
+    D.VAR_KEYS.forEach(P => { const a = A.an[P], b = B.an[P]; const sd = Math.max(a.noise || 0, b.noise || 0) || 1; const z = Math.abs(a.meanAll - b.meanAll) / sd; if (!big || z > big.z) big = { P, z }; });
+    if (big) { const P = big.P, v = D.VARIABLES[P]; items.push(['lvl2', demo ? 'Dato (simulado)' : 'Dato NASA', `La mayor diferencia de clima promedio está en <b>${v.name.toLowerCase()}</b>: ${fmt(A.an[P].meanAll, dec(P, 1))} ${unitAnnual(P)} en ${esc(A.place.name)} y ${fmt(B.an[P].meanAll, dec(P, 1))} ${unitAnnual(P)} en ${esc(B.place.name)}.`]); }
+    items.push(['lim', 'Límite', 'Comparar tendencias no explica sus causas. Suelo, uso de la tierra, relieve y otras condiciones locales también importan.']);
+
+    const rows = D.VAR_KEYS.map(P => {
+      const v = D.VARIABLES[P], a = A.an[P], b = B.an[P];
+      const cell = (x) => `<span class="tr">${signed(x.mk.slope * 10, dec(P, 1))}</span>${sigDot(x)}<span class="mu">prom. ${fmt(x.meanAll, dec(P, 1))}</span>`;
+      return `<tr data-var="${P}" class="${P === state.cmpVar ? 'on' : ''}"><td><span class="vn">${v.icon} ${esc(v.short)}</span><span class="mu">${unitAnnual(P)} por década</span></td><td>${cell(a)}</td><td>${cell(b)}</td></tr>`;
+    }).join('');
+
+    $('#cmpOut').innerHTML = `
+      ${demo ? '<div class="banner demo" style="margin-top:12px"><span>⚠️</span><div><b>Datos simulados</b>Solo para demostración.</div></div>' : ''}
+      ${sameCell ? '<div class="banner info" style="margin-top:12px"><span>ℹ️</span><div>A y B caen en la <b>misma celda de datos</b>, así que sus resultados son idénticos. Elegí un lugar más lejano.</div></div>' : ''}
+      <table class="cmp-table"><thead><tr><th>Variable</th><th style="color:var(--honey-dark)">A · ${esc(A.place.name)}</th><th style="color:var(--sky)">B · ${esc(B.place.name)}</th></tr></thead><tbody>${rows}</tbody></table>
+      <p class="place-meta">Mismo período (${A.y0}–${A.y1}) y mismo método en ambos. Tocá una fila para graficarla.</p>
+      <div class="row"><h4 style="margin:8px 0 0" id="cmpTitle"></h4></div>
+      <div class="chart-box"><canvas id="cvCmp" height="230"></canvas><div class="chart-legend" id="lgCmp"></div></div>
+      <div class="reading"><h4>⚖️ Lectura comparada</h4><ul>${items.map(([c, l, t]) => `<li><span class="badge ${c}">${l}</span><div>${t}</div></li>`).join('')}</ul></div>`;
+    $$('#cmpOut .cmp-table tr[data-var]').forEach(tr => tr.onclick = () => {
+      state.cmpVar = tr.dataset.var;
+      $$('#cmpOut .cmp-table tr[data-var]').forEach(x => x.classList.toggle('on', x === tr));
+      drawCmpChart();
+    });
+    if (state.tab === 'comparar') requestAnimationFrame(drawCmpChart);
+  }
+  function drawCmpChart() {
+    const A = state.res, B = state.cmp; const cv = $('#cvCmp');
+    if (!A || !B || !B.an || !cv || !cv.offsetParent) return;
+    const P = state.cmpVar, v = D.VARIABLES[P];
+    const da = A.series.params[P], db = B.series.params[P];
+    const ma = A.an[P].mk, mb = B.an[P].mk;
+    const CA = '#b87a00', CB = '#2f6fa3';
+    $('#cmpTitle').textContent = `${v.icon} ${v.name} (${unitAnnual(P)})`;
+    const xs = da.years;
+    const yb = xs.map(y => { const i = db.years.indexOf(y); return i < 0 ? null : db.annual[i]; });
+    Ch.lineChart(cv, {
+      height: 230, yUnit: unitAnnual(P),
+      series: [
+        { x: xs, y: da.annual, color: CA, width: 1.6, dots: 2.2 },
+        { x: xs, y: yb, color: CB, width: 1.6, dots: 2.2 },
+        { x: xs, y: xs.map(t => ma.intercept + ma.slope * t), color: CA, width: 2.4, dash: A.an[P].status === 'sig' ? [] : [6, 5] },
+        { x: xs, y: xs.map(t => mb.intercept + mb.slope * t), color: CB, width: 2.4, dash: B.an[P].status === 'sig' ? [] : [6, 5] }
+      ],
+      tooltip: (i) => `<b>${xs[i]}</b><br>A: ${fmt(da.annual[i], dec(P, 1))} · B: ${fmt(yb[i], dec(P, 1))} ${unitAnnual(P)}`
+    });
+    $('#lgCmp').innerHTML = `<span><i style="background:${CA}"></i>A · ${esc(A.place.name)}</span><span><i style="background:${CB}"></i>B · ${esc(B.place.name)}</span><span>Línea continua = tendencia significativa; punteada = no significativa</span>`;
+  }
+
   /* ================= pestañas ================= */
-  const TABS = ['detector', 'variable', 'donde', 'comunidad', 'metodo'];
+  const TABS = ['detector', 'variable', 'comparar', 'donde', 'comunidad', 'metodo'];
   function goTab(t, noHash) {
     if (!TABS.includes(t)) t = 'detector';
     state.tab = t;
@@ -2277,6 +2514,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + t));
     if (!noHash) { try { history.replaceState(null, '', '#' + t); } catch (e) { /* vista protegida */ } }
     if (t === 'variable') requestAnimationFrame(drawVarCharts);
+    if (t === 'comparar') requestAnimationFrame(drawCmpChart);
     if (window.innerWidth <= 900 && !noHash) { const tabs = $('.tabs'); if (tabs.getBoundingClientRect().top < 0 || tabs.getBoundingClientRect().top > window.innerHeight * 0.6) tabs.scrollIntoView({ behavior: 'smooth' }); }
     else $('.panel').scrollTop = Math.min($('.panel').scrollTop, $('.tabs').offsetTop);
   }
@@ -2291,7 +2529,10 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   };
 
   let rsT;
-  window.addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { if (state.tab === 'variable') drawVarCharts(); }, 150); });
+  window.addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { if (state.tab === 'variable') drawVarCharts(); if (state.tab === 'comparar') drawCmpChart(); }, 150); });
+
+  $('#glToggle').onclick = () => { const b = $('#glBody'); b.hidden = !b.hidden; $('#glToggle').setAttribute('aria-expanded', String(!b.hidden)); $('#glToggle').textContent = b.hidden ? 'ⓘ ¿Qué es el recuadro?' : '✕ Cerrar'; };
+  if (window.innerWidth > 900) { $('#glBody').hidden = false; $('#glToggle').textContent = '✕ Cerrar'; $('#glToggle').setAttribute('aria-expanded', 'true'); }
 
   /* ================= inicio ================= */
   fillYears(); fillVarSelects(); fillNdvi();
@@ -2299,6 +2540,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   setBase('sat');
   renderPlace();
   renderObsList();
+  renderCmpHeader();
   goTab(location.hash.slice(1) || 'detector', true);
   runDetector();
   window.__eiru = { state, map, runDetector, runGrid, goTab };
