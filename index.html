@@ -1238,18 +1238,18 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       why: 'Influye en la fenología (floración, brotación), en la actividad de polinizadores y en el estrés de cultivos y árboles.'
     },
     T2M_MAX: {
-      name: 'Temperatura máxima', short: 'Temp. máx.', unit: '°C', agg: 'mean', icon: '🔥', since: 1981,
-      palette: 'temp', decimals: 2,
-      what: 'Promedio mensual de las temperaturas máximas diarias a 2 m.',
+      name: 'Temperatura máxima extrema', short: 'Máx. extrema', unit: '°C', agg: 'mean', icon: '🔥', since: 1981,
+      palette: 'temp', decimals: 2, dailyAgg: 'max',
+      what: 'La temperatura más alta de cada mes, a 2 m (el día más caluroso). El valor anual es el promedio de esos 12 extremos.',
       source: 'MERRA-2 (reanálisis de NASA GMAO), vía NASA POWER',
-      why: 'Las máximas altas se asocian con golpes de calor, aborto de flores y mayor demanda de agua.'
+      why: 'Los días más calurosos se asocian con golpes de calor, aborto de flores y mayor demanda de agua.'
     },
     T2M_MIN: {
-      name: 'Temperatura mínima', short: 'Temp. mín.', unit: '°C', agg: 'mean', icon: '❄️', since: 1981,
-      palette: 'temp', decimals: 2,
-      what: 'Promedio mensual de las temperaturas mínimas diarias a 2 m.',
+      name: 'Temperatura mínima extrema', short: 'Mín. extrema', unit: '°C', agg: 'mean', icon: '❄️', since: 1981,
+      palette: 'temp', decimals: 2, dailyAgg: 'min',
+      what: 'La temperatura más baja de cada mes, a 2 m (la noche más fría). El valor anual es el promedio de esos 12 extremos.',
       source: 'MERRA-2 (reanálisis de NASA GMAO), vía NASA POWER',
-      why: 'Noches más cálidas cambian la respiración de las plantas y el riesgo de heladas.'
+      why: 'Si la noche más fría de cada mes es menos fría, baja el riesgo de heladas y cambia la respiración nocturna de las plantas.'
     },
     PRECTOTCORR: {
       name: 'Precipitación', short: 'Lluvia', unit: 'mm', agg: 'sum', icon: '🌧️', since: 1981,
@@ -1460,7 +1460,8 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
           if (!lastDate || k > lastDate) lastDate = k;
         }
         if (vals.length < 10) continue; // muy pocos días: no se muestra
-        let v = vals.reduce((a, b) => a + b, 0) / vals.length; // promedio diario
+        // mismo criterio que la serie mensual de POWER: T2M_MAX = máximo del mes, T2M_MIN = mínimo del mes
+        let v = def.dailyAgg === 'max' ? Math.max(...vals) : def.dailyAgg === 'min' ? Math.min(...vals) : vals.reduce((a, b) => a + b, 0) / vals.length;
         if (def.perDay) v = v * dim;        // lluvia: equivalente mensual (mm/mes)
         else if (def.scale) v = v * def.scale;
         months.push({ m, v, days: vals.length, partial: vals.length < dim - 3 });
@@ -1752,7 +1753,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       id: 'calor', cat: 'desastres', icon: '🥵', title: 'Olas de calor',
       drivers: [['T2M_MAX', +1], ['T2M_MIN', +1]], key: 'T2M_MAX',
       score: (h) => h.up('T2M_MAX') + 0.5 * h.up('T2M_MIN') + (h.recent('T2M_MAX') > 0.5 ? 1 : 0),
-      why: 'Máximas más altas y noches más cálidas que no dejan recuperarse a personas, animales y plantas.',
+      why: 'Días extremos más calurosos y noches menos frías, que no dejan recuperarse a personas, animales y plantas.',
       actions: ['Planificar trabajos pesados al aire libre en las horas más frescas.', 'Asegurar sombra y agua para personas y animales.', 'Seguir las alertas de la Dirección de Meteorología e Hidrología (DMH).'],
       basis: 'Una tendencia al alza en las máximas aumenta la probabilidad de días extremos.'
     },
@@ -1804,8 +1805,8 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     {
       id: 'golpe', cat: 'salud', icon: '🌡️', title: 'Golpe de calor y personas con medicación',
       drivers: [['T2M_MAX', +1], ['T2M_MIN', +1], ['RH2M', +1]], key: 'T2M_MAX',
-      score: (h) => h.up('T2M_MAX') + 0.5 * h.up('T2M_MIN') + 0.3 * h.up('RH2M') + (h.level('T2M_MAX') >= 30 ? 0.7 : 0),
-      extra: (h) => `Temperatura máxima promedio reciente: <b>${h.fmtLevel('T2M_MAX')}</b>.`,
+      score: (h) => h.up('T2M_MAX') + 0.5 * h.up('T2M_MIN') + 0.3 * h.up('RH2M') + (h.level('T2M_MAX') >= 35 ? 0.7 : 0),
+      extra: (h) => `Temperatura más alta de cada mes, en promedio, en la última década: <b>${h.fmtLevel('T2M_MAX')}</b>.`,
       why: 'Con calor el cuerpo pierde agua y sales. Adultos mayores, niños, embarazadas, trabajadores al sol y personas que toman ciertos medicamentos (por ejemplo diuréticos, algunos antihipertensivos o psicofármacos) tienen más riesgo de deshidratación, mareos y desmayos.',
       actions: ['Hidratarse seguido aunque no haya sed; evitar el sol fuerte del mediodía.', 'Quien toma medicación crónica: consultar al médico cómo cuidarse en días de calor. No suspender medicamentos por cuenta propia.', 'Estar atentos a vecinos mayores o que viven solos.'],
       basis: 'Más días calurosos aumentan los riesgos para la salud por calor; algunos medicamentos afectan la regulación de la temperatura y la hidratación.'
@@ -1840,7 +1841,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     {
       id: 'estres_termico', cat: 'agro', icon: '🌼', title: 'Calor en floración (aborto de flores)',
       drivers: [['T2M_MAX', +1]], key: 'T2M_MAX',
-      score: (h) => h.up('T2M_MAX') + (h.level('T2M_MAX') >= 30 ? 0.7 : 0),
+      score: (h) => h.up('T2M_MAX') + (h.level('T2M_MAX') >= 35 ? 0.7 : 0),
       why: 'Temperaturas muy altas durante la floración (por encima de unos 35 °C) pueden provocar caída de flores y menos granos.',
       actions: ['Ubicar la floración fuera de los meses más calurosos ajustando la fecha de siembra.', 'Preferir materiales con tolerancia al calor.'],
       basis: 'Relación agronómica general entre calor extremo y fecundación.'
@@ -1865,7 +1866,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       id: 'ganado', cat: 'agro', icon: '🐄', title: 'Estrés por calor en el ganado',
       drivers: [['T2M_MAX', +1], ['RH2M', +1]], key: 'T2M_MAX',
       score: (h) => h.up('T2M_MAX') + 0.4 * h.up('RH2M') + (h.thi() >= 79 ? 1 : h.thi() >= 72 ? 0.5 : 0),
-      extra: (h) => { const t = h.thi(); return isFinite(t) ? `Índice de temperatura y humedad (ITH) del mes más caluroso, con las máximas de ${h.recentLabel()}: <b>${h.fmt(t, 0)}</b> → ${t >= 89 ? 'estrés severo' : t >= 79 ? 'estrés moderado' : t >= 72 ? 'estrés leve' : 'sin estrés'}.` : ''; },
+      extra: (h) => { const t = h.thi(); return isFinite(t) ? `Índice de temperatura y humedad (ITH) en los días más calurosos del mes más cálido (${h.recentLabel()}): <b>${h.fmt(t, 0)}</b> → ${t >= 89 ? 'estrés severo' : t >= 79 ? 'estrés moderado' : t >= 72 ? 'estrés leve' : 'sin estrés'}.` : ''; },
       why: 'Con calor y humedad las vacas comen menos y producen menos leche y carne; también baja la fertilidad.',
       actions: ['Sombra (árboles o media sombra) y agua fresca abundante.', 'Manejo y traslados en horas frescas.', 'Sistemas silvopastoriles: árboles nativos en los potreros.'],
       basis: 'ITH = (1,8T + 32) − (0,55 − 0,0055·HR)(1,8T − 26). Desde 72 empieza el estrés en bovinos.'
@@ -1996,19 +1997,19 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     const pr = () => { const x = v('PRECTOTCORR'); return x ? `${fmt(x.pct, 0)} % de la lluvia normal` : ''; };
     const R = {
       sequia: () => (z('GWETROOT') <= -1 || z('PRECTOTCORR') <= -1) && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} y ${pr()} (${lbl}).`,
-      calor: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      calor: () => z('T2M_MAX') >= 1 && `Días más calurosos ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
       incendios: () => z('RH2M') <= -0.8 && (z('T2M_MAX') >= 0.5 || z('PRECTOTCORR') <= -0.8) && `Aire más seco (${d('RH2M', '%')} de humedad) con más calor o menos lluvia (${lbl}).`,
       inundaciones: () => z('PRECTOTCORR') >= 1 && z('GWETROOT') >= 0.5 && `${pr()} con suelos más húmedos que lo normal (${lbl}).`,
       heladas: () => { const t = c.vars.T2M_MIN; if (!t) return null; const w = t.rows.filter(r => r.m >= 5 && r.m <= 7); if (!w.length) return null; const zz = w.reduce((a, r) => a + r.z, 0) / w.length; return zz <= -1 && `El invierno de ${c.year} tuvo mínimas más bajas que lo normal.`; },
       dengue: () => z('T2M') >= 0.5 && (z('PRECTOTCORR') >= 0 || z('RH2M') >= 0) && `Temperatura ${d('T2M', '°C')} sobre lo normal con lluvia o humedad iguales o mayores (${lbl}).`,
-      golpe: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      golpe: () => z('T2M_MAX') >= 1 && `Días más calurosos ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
       humo: () => z('RH2M') <= -0.8 && z('PRECTOTCORR') <= -0.5 && `Meses más secos que lo normal (${lbl}).`,
       agua_salud: () => z('PRECTOTCORR') >= 1 && `${pr()} (${lbl}).`,
       estres_hidrico: () => z('GWETROOT') <= -1 && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} bajo lo normal (${lbl}).`,
-      estres_termico: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      estres_termico: () => z('T2M_MAX') >= 1 && `Días más calurosos ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
       roya: () => z('RH2M') >= 0.8 && z('PRECTOTCORR') >= 0.5 && `Más humedad y lluvia que lo normal (${lbl}).`,
       plagas: () => z('T2M_MAX') >= 0.8 && z('GWETROOT') <= -0.5 && `Más calor y suelos más secos que lo normal (${lbl}).`,
-      ganado: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      ganado: () => z('T2M_MAX') >= 1 && `Días más calurosos ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
       arboles: () => z('GWETROOT') <= -1 && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} bajo lo normal (${lbl}).`,
       polinizadores: () => z('T2M') >= 1 && `Temperatura ${d('T2M', '°C')} sobre lo normal (${lbl}).`,
       agua: () => z('PRECTOTCORR') <= -1 && z('GWETROOT') <= -0.5 && `${pr()} y suelos más secos (${lbl}).`
