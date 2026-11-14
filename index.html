@@ -415,6 +415,25 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 .imp-none { margin-top: 14px; }
 .imp-none > summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 13.5px; }
 
+/* ---------- año en curso ---------- */
+.cur-line { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; border: 1px solid #cfe3d7; background: #eef6f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-size: 13px; }
+.cur-line span { flex: 1; }
+.muted-line { color: var(--muted); cursor: default; }
+.cur-box { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px; margin: 0 0 14px; }
+.heat-wrap { overflow-x: auto; }
+.heat { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 11px; }
+.heat th { font-weight: 600; color: var(--muted); padding: 2px 3px; text-align: center; white-space: nowrap; }
+.heat tbody th { text-align: left; color: var(--ink); font-size: 11.5px; }
+.heat .hc { text-align: center; padding: 6px 2px; border-radius: 5px; font-weight: 600; min-width: 30px; font-variant-numeric: tabular-nums; }
+.heat .hc.part { outline: 1.5px dashed rgba(0,0,0,.35); outline-offset: -2px; }
+.heat .na { color: #bbb; }
+.now-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+.now-item { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; background: #fdf6e3; border-radius: 10px; padding: 8px 10px; }
+.now-item > span { font-size: 18px; }
+.lvbs { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.lv-now { background: #183f30; color: #f5efe0; }
+.imp-now { background: #eef6f0; border-radius: 8px; padding: 7px 9px; }
+
 </style>
 </head>
 <body>
@@ -611,6 +630,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
   <li>Algunos riesgos suman contexto del clima actual: la temperatura media reciente (dengue), el índice de temperatura y humedad del mes más caluroso (ganado) o la anomalía de los últimos 5 años (olas de calor, inundaciones).</li>
   <li>El puntaje se resume como <b>señal alta</b> (4 o más puntos), <b>media</b> (2,5 a 4), <b>baja</b> (más de 0) o <b>sin señal</b>. Cada tarjeta muestra la evidencia, la serie temporal y acciones de prevención.</li>
 </ul>
+<p><b>El año en curso:</b> la tendencia usa años completos, porque un año a medias distorsionaría el promedio. Aparte, Eiru descarga los <b>datos diarios casi en tiempo real</b> de NASA POWER del año actual, los resume por mes y compara cada mes con el promedio de ese mismo mes en el período elegido. Si los últimos 3 meses se apartan claramente de lo normal (por ejemplo, la humedad del suelo un desvío estándar por debajo), el riesgo se marca con ⚡: <b>ya se observa este año</b>. Los datos recientes son provisionales y la NASA puede revisarlos.</p>
 <p>Son <b>hipótesis para priorizar la prevención</b>, no pronósticos. Por ejemplo, el riesgo real de dengue también depende de que estén presentes el mosquito y el virus, y los tornados o el granizo duran minutos u horas: los datos mensuales no pueden detectarlos.</p>
 
 <h4>4. Cuatro niveles de información</h4>
@@ -1417,12 +1437,83 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     return raw;
   }
 
+
+  /* ---------- año en curso (datos DIARIOS casi en tiempo real) ---------- */
+  const POWER_DAILY = 'https://power.larc.nasa.gov/api/temporal/daily/point';
+  function ymd(dt) { return dt.toISOString().slice(0, 10).replace(/-/g, ''); }
+
+  /** Agrega datos diarios a meses: {P: [{m, v, days, partial}]} con v en las mismas unidades que la serie mensual. */
+  function aggregateDaily(raw, params, year, opts) {
+    const out = {};
+    let lastDate = null;
+    for (const P of params) {
+      const def = VARIABLES[P], src = raw[P] || {};
+      const months = [];
+      for (let m = 0; m < 12; m++) {
+        const vals = [];
+        const dim = daysIn(year, m);
+        for (let dd = 1; dd <= dim; dd++) {
+          const k = `${year}${String(m + 1).padStart(2, '0')}${String(dd).padStart(2, '0')}`;
+          const v = src[k];
+          if (v === undefined || v === null || v <= -998 || !isFinite(v)) continue;
+          vals.push(v);
+          if (!lastDate || k > lastDate) lastDate = k;
+        }
+        if (vals.length < 10) continue; // muy pocos días: no se muestra
+        let v = vals.reduce((a, b) => a + b, 0) / vals.length; // promedio diario
+        if (def.perDay) v = v * dim;        // lluvia: equivalente mensual (mm/mes)
+        else if (def.scale) v = v * def.scale;
+        months.push({ m, v, days: vals.length, partial: vals.length < dim - 3 });
+      }
+      out[P] = months;
+    }
+    return { months: out, lastDate };
+  }
+
+  async function getCurrentYear(lat, lon, params, opts) {
+    opts = opts || {};
+    const now = opts.now || new Date();
+    const year = now.getUTCFullYear();
+    const cell = snapCell(lat, lon);
+    const today = ymd(now);
+    const k = `eiru:cur:v1:${cell.lat.toFixed(3)}:${cell.lon.toFixed(3)}:${year}:${today}`;
+    const cached = cacheGet(k);
+    if (cached && !opts.forceDemo) return Object.assign(aggregateDaily(cached.raw, params, year), { year, mode: 'cache', cell });
+    if (!opts.forceDemo && liveAvailable !== false) {
+      for (const endD of [now, new Date(now.getTime() - 7 * 864e5)]) {
+        const url = `${POWER_DAILY}?parameters=${params.join(',')}&community=AG&longitude=${cell.lon}&latitude=${cell.lat}&start=${year}0101&end=${ymd(endD)}&format=JSON`;
+        try {
+          const r = await fetchWithTimeout(url, opts.timeout || 45000);
+          const j = await r.json().catch(() => null);
+          if (r.ok && j && j.properties && j.properties.parameter) {
+            cacheSet(k, { raw: j.properties.parameter, mode: 'live', at: new Date().toISOString() });
+            return Object.assign(aggregateDaily(j.properties.parameter, params, year), { year, mode: 'live', cell, url });
+          }
+        } catch (e) { if (e instanceof TypeError) break; }
+      }
+      if (liveAvailable === true) return null; // hay conexión pero la API diaria no respondió: no inventar datos
+    }
+    // modo demostración: año simulado y rotulado
+    const raw = demoRaw(cell.lat, cell.lon, params, year, year);
+    const daily = {};
+    for (const P of params) {
+      daily[P] = {};
+      const lastM = now.getUTCMonth();
+      for (let m = 0; m <= lastM; m++) {
+        const v = raw[P][`${year}${String(m + 1).padStart(2, '0')}`];
+        const dim = m === lastM ? Math.max(0, now.getUTCDate() - 3) : daysIn(year, m);
+        for (let dd = 1; dd <= dim; dd++) daily[P][`${year}${String(m + 1).padStart(2, '0')}${String(dd).padStart(2, '0')}`] = v;
+      }
+    }
+    return Object.assign(aggregateDaily(daily, params, year), { year, mode: 'demo', cell });
+  }
+
   function sourceUrl(lat, lon, params, y0, y1) {
     const c = snapCell(lat, lon);
     return `${POWER_URL}?parameters=${params.join(',')}&community=AG&longitude=${c.lon}&latitude=${c.lat}&start=${y0}&end=${y1}&format=CSV`;
   }
 
-  root.EiruData = { VARIABLES, VAR_KEYS, FIRST_YEAR, LAST_YEAR, CELL, snapCell, getSeries, sourceUrl, isLive: () => liveAvailable, resetLive: () => { liveAvailable = null; }, daysIn };
+  root.EiruData = { VARIABLES, VAR_KEYS, FIRST_YEAR, LAST_YEAR, CELL, snapCell, getSeries, getCurrentYear, sourceUrl, isLive: () => liveAvailable, resetLive: () => { liveAvailable = null; }, daysIn };
 })(window);
 
 /* ===== Eiru · Gráficos en canvas (sin dependencias) ===== */
@@ -1866,7 +1957,67 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     }).sort((a, b) => b.scoreVal - a.scoreVal);
   }
 
-  root.EiruImpacts = { CATS, IMPACTS, evaluate };
+
+  /* ---------- Año en curso: anomalías frente al promedio del período ---------- */
+  const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  function analyseCurrent(cur, res, VARIABLES) {
+    if (!cur) return null;
+    const params = res.series.params, out = { year: cur.year, mode: cur.mode, lastDate: cur.lastDate, vars: {} };
+    for (const P of Object.keys(cur.months)) {
+      const ser = params[P]; if (!ser) continue;
+      const rows = cur.months[P].map(c => {
+        const hist = ser.monthly.filter(q => q.m === c.m && q.v != null).map(q => q.v);
+        if (hist.length < 5) return null;
+        const mean = hist.reduce((a, b) => a + b, 0) / hist.length;
+        const sd = Math.sqrt(hist.reduce((a, b) => a + (b - mean) ** 2, 0) / (hist.length - 1)) || 1e-9;
+        return { m: c.m, v: c.v, mean, sd, diff: c.v - mean, z: (c.v - mean) / sd, pct: mean ? c.v / mean * 100 : NaN, partial: c.partial, days: c.days };
+      }).filter(Boolean);
+      if (!rows.length) continue;
+      const full = rows.filter(r => !r.partial);
+      const win = (full.length ? full : rows).slice(-3);
+      const avg = (arr, k) => arr.reduce((a, r) => a + r[k], 0) / arr.length;
+      out.vars[P] = {
+        rows,
+        recent: { z: avg(win, 'z'), diff: avg(win, 'diff'), pct: avg(win, 'pct'), label: win.map(r => MONTHS[r.m]).join('–') },
+        ytd: { z: avg(rows, 'z'), diff: avg(rows, 'diff'), pct: P === 'PRECTOTCORR' ? rows.reduce((a, r) => a + r.v, 0) / rows.reduce((a, r) => a + r.mean, 0) * 100 : avg(rows, 'pct') }
+      };
+    }
+    return Object.keys(out.vars).length ? out : null;
+  }
+
+  // ¿Se observa ya en el año en curso? Devuelve un texto o null. Usa los últimos 3 meses con datos.
+  function nowSignal(id, c, fmt) {
+    if (!c) return null;
+    const v = (P) => c.vars[P] ? c.vars[P].recent : null;
+    const z = (P) => v(P) ? v(P).z : 0;
+    const lbl = (c.vars.T2M || c.vars[Object.keys(c.vars)[0]]).recent.label;
+    const d = (P, unit, dd) => { const x = v(P); if (!x) return ''; const s = x.diff > 0 ? '+' : '−'; return `${s}${fmt(Math.abs(x.diff), dd ?? 1)} ${unit}`; };
+    const pr = () => { const x = v('PRECTOTCORR'); return x ? `${fmt(x.pct, 0)} % de la lluvia normal` : ''; };
+    const R = {
+      sequia: () => (z('GWETROOT') <= -1 || z('PRECTOTCORR') <= -1) && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} y ${pr()} (${lbl}).`,
+      calor: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      incendios: () => z('RH2M') <= -0.8 && (z('T2M_MAX') >= 0.5 || z('PRECTOTCORR') <= -0.8) && `Aire más seco (${d('RH2M', '%')} de humedad) con más calor o menos lluvia (${lbl}).`,
+      inundaciones: () => z('PRECTOTCORR') >= 1 && z('GWETROOT') >= 0.5 && `${pr()} con suelos más húmedos que lo normal (${lbl}).`,
+      heladas: () => { const t = c.vars.T2M_MIN; if (!t) return null; const w = t.rows.filter(r => r.m >= 5 && r.m <= 7); if (!w.length) return null; const zz = w.reduce((a, r) => a + r.z, 0) / w.length; return zz <= -1 && `El invierno de ${c.year} tuvo mínimas más bajas que lo normal.`; },
+      dengue: () => z('T2M') >= 0.5 && (z('PRECTOTCORR') >= 0 || z('RH2M') >= 0) && `Temperatura ${d('T2M', '°C')} sobre lo normal con lluvia o humedad iguales o mayores (${lbl}).`,
+      golpe: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      humo: () => z('RH2M') <= -0.8 && z('PRECTOTCORR') <= -0.5 && `Meses más secos que lo normal (${lbl}).`,
+      agua_salud: () => z('PRECTOTCORR') >= 1 && `${pr()} (${lbl}).`,
+      estres_hidrico: () => z('GWETROOT') <= -1 && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} bajo lo normal (${lbl}).`,
+      estres_termico: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      roya: () => z('RH2M') >= 0.8 && z('PRECTOTCORR') >= 0.5 && `Más humedad y lluvia que lo normal (${lbl}).`,
+      plagas: () => z('T2M_MAX') >= 0.8 && z('GWETROOT') <= -0.5 && `Más calor y suelos más secos que lo normal (${lbl}).`,
+      ganado: () => z('T2M_MAX') >= 1 && `Máximas ${d('T2M_MAX', '°C')} sobre lo normal (${lbl}).`,
+      arboles: () => z('GWETROOT') <= -1 && `Humedad del suelo ${d('GWETROOT', 'pts', 1)} bajo lo normal (${lbl}).`,
+      polinizadores: () => z('T2M') >= 1 && `Temperatura ${d('T2M', '°C')} sobre lo normal (${lbl}).`,
+      agua: () => z('PRECTOTCORR') <= -1 && z('GWETROOT') <= -0.5 && `${pr()} y suelos más secos (${lbl}).`
+    };
+    const f = R[id]; if (!f) return null;
+    const r = f(); return r || null;
+  }
+
+  root.EiruImpacts = { CATS, IMPACTS, evaluate, analyseCurrent, nowSignal, MONTHS };
 })(window);
 
 /* ===== Eiru · Aplicación ===== */
@@ -1909,7 +2060,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     res: null, varSel: 'T2M', chartMode: 'annual',
     grid: null, base: 'sat', ndvi: null,
     obs: [], draft: null, placing: false,
-    tab: 'detector', impCat: 'todos', runToken: 0, gridToken: 0, cmp: null, cmpVar: 'T2M', cmpToken: 0
+    tab: 'detector', impCat: 'todos', curA: null, curToken: 0, curLoading: false, runToken: 0, gridToken: 0, cmp: null, cmpVar: 'T2M', cmpToken: 0
   };
 
   /* ================= utilidades UI ================= */
@@ -2170,6 +2321,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       setHint();
       renderCmpHeader();
       if (state.cmp) runCompare();
+      runCurrent();
     } catch (err) {
       console.error(err);
       if (token !== state.runToken) return;
@@ -2202,6 +2354,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     let html = `<div class="summary"><div class="big">${nsig === 0 ? 'No se detectan cambios significativos' : `${nsig} de ${D.VAR_KEYS.length} variables cambian de forma significativa`}</div>
       <div class="small">${esc(r.place.name)} · ${r.y0}–${r.y1}${nweak ? ` · ${nweak} con indicio débil` : ''}<br>Datos: ${modeTxt}<br>Significancia corregida por analizar 8 variables a la vez (Benjamini-Hochberg).</div></div>`;
     if (!samePlace) html += `<div class="banner info"><span>ℹ️</span><div>El punto elegido está en la misma celda de datos que el análisis anterior, así que los resultados son los mismos.</div></div>`;
+    html += curLineHtml();
     html += `<button class="imp-link" data-goto-imp>🩺🌾⚠️ <span><b>¿Qué significa para mí?</b> Ver riesgos para salud, agro y desastres naturales</span> →</button>`;
     html += `<div class="cards">`;
     for (const P of order) {
@@ -2704,17 +2857,20 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   function renderImpacts() {
     const r = state.res; if (!r) return;
     const list = IMP.evaluate(r, D.VARIABLES, fmt);
+    list.forEach(I => { I.now = IMP.nowSignal(I.id, state.curA, fmt); });
+    list.sort((a, b) => (b.scoreVal + (b.now ? 1.5 : 0)) - (a.scoreVal + (a.now ? 1.5 : 0)));
     const shown = list.filter(I => state.impCat === 'todos' || I.cat === state.impCat);
-    const active = shown.filter(I => I.lv.k !== 'nula');
-    const none = shown.filter(I => I.lv.k === 'nula');
+    const active = shown.filter(I => I.lv.k !== 'nula' || I.now);
+    const none = shown.filter(I => I.lv.k === 'nula' && !I.now);
     const top = list.filter(I => ['alta', 'media'].includes(I.lv.k)).slice(0, 3);
     const card = (I) => {
       const v = D.VARIABLES[I.key], a = r.an[I.key], d = r.series.params[I.key];
       const pal = PAL[v.palette], col = a.dir >= 0 ? pal.pos : pal.neg;
       const tr = isFinite(a.mk.slope) ? [a.mk.intercept + a.mk.slope * d.years[0], a.mk.intercept + a.mk.slope * d.years[d.years.length - 1]] : null;
       return `<details class="imp imp-${I.lv.k}" ${I.lv.k === 'alta' ? 'open' : ''}>
-        <summary><span class="imp-ic">${I.icon}</span><span class="imp-t"><b>${esc(I.title)}</b><span class="imp-cat">${IMP.CATS[I.cat].icon} ${esc(IMP.CATS[I.cat].label)}</span></span><span class="lvb lv-${I.lv.k}">${I.lv.label}</span></summary>
+        <summary><span class="imp-ic">${I.icon}</span><span class="imp-t"><b>${esc(I.title)}</b><span class="imp-cat">${IMP.CATS[I.cat].icon} ${esc(IMP.CATS[I.cat].label)}</span></span><span class="lvbs"><span class="lvb lv-${I.lv.k}">${I.lv.label}</span>${I.now ? `<span class="lvb lv-now">⚡ ${state.curA.year}</span>` : ''}</span></summary>
         <div class="imp-body">
+          ${I.now ? `<p class="imp-now">⚡ <b>Ya se observa en ${state.curA.year}:</b> ${I.now}</p>` : ''}
           <p>${I.lower ? esc(I.lowerText) : esc(I.why)}</p>
           ${I.extraHtml ? `<p class="imp-extra">${I.extraHtml}</p>` : ''}
           <div class="imp-ts"><span class="place-meta">Serie temporal: ${esc(v.name.toLowerCase())} (${r.y0}–${r.y1})</span>${Ch.sparkline(d.annual, col, a.status !== 'none' ? tr : null).replace('class="spark"', 'class="spark big"')}</div>
@@ -2728,12 +2884,76 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     $('#impOut').innerHTML = `
       ${r.mode === 'demo' ? '<div class="banner demo" style="margin-top:12px"><span>⚠️</span><div><b>Datos simulados</b>Solo para demostración.</div></div>' : ''}
       <div class="summary" style="margin-top:12px"><div class="big">${top.length ? `Señales más fuertes en ${esc(r.place.name)}` : `Sin señales fuertes en ${esc(r.place.name)}`}</div>
-        <div class="small">${top.length ? top.map(I => `${I.icon} ${esc(I.title)} (${I.lv.label.replace('Señal ', '')})`).join(' · ') : 'Ninguna combinación de tendencias es significativa en este período.'}<br>Basado en las tendencias de ${r.y0}–${r.y1} en la celda de datos (~55 × 63 km).</div></div>
+        <div class="small">${top.length ? top.map(I => `${I.icon} ${esc(I.title)} (${I.lv.label.replace('Señal ', '')})`).join(' · ') : 'Ninguna combinación de tendencias es significativa en este período.'}<br>Basado en las tendencias de ${r.y0}–${r.y1} en la celda de datos (~55 × 63 km)${state.curA ? ` y en los datos diarios de ${state.curA.year} (⚡ = ya se observa este año)` : ''}.</div></div>
+      ${curSectionHtml()}
       <div class="banner info"><span>🧭</span><div><b>Son hipótesis, no pronósticos</b>Cada señal combina las tendencias de varias variables según relaciones conocidas. Sirve para priorizar qué vigilar y prevenir. No reemplaza los avisos de la DMH, ni al médico, ni al técnico agrónomo.</div></div>
       <div class="imp-list">${active.map(card).join('') || '<p class="place-meta">No hay señales en esta categoría para este lugar y período.</p>'}</div>
       ${none.length ? `<details class="imp-none"><summary>Otros riesgos sin señal aquí (${none.length})</summary><div class="imp-list">${none.map(card).join('')}</div></details>` : ''}
       <p class="foot">Las señales cambian si elegís otro lugar o período. Probá comparar Ciudad del Este con el Chaco.</p>`;
     $$('#impOut [data-var]').forEach(b => b.onclick = () => { state.varSel = b.dataset.var; $('#varSel').value = state.varSel; $('#gridVar').value = state.varSel; renderVariable(); goTab('variable'); });
+  }
+
+  /* ================= Año en curso ================= */
+  async function runCurrent() {
+    const r = state.res; if (!r) return;
+    const token = ++state.curToken;
+    state.curA = null; state.curLoading = true;
+    try {
+      const cur = await D.getCurrentYear(state.place.lat, state.place.lon, ['T2M', 'T2M_MAX', 'T2M_MIN', 'PRECTOTCORR', 'GWETROOT', 'RH2M']);
+      if (token !== state.curToken) return;
+      state.curA = cur ? IMP.analyseCurrent(cur, state.res, D.VARIABLES) : null;
+    } catch (e) { console.warn('Año en curso no disponible', e); state.curA = null; }
+    if (token !== state.curToken) return;
+    state.curLoading = false;
+    renderDetector(); renderImpacts();
+  }
+  function fmtLastDate(s) { return s ? `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}` : ''; }
+  function curDiffTxt(P, x, which) {
+    const o = x[which];
+    if (P === 'PRECTOTCORR') return `${fmt(o.pct, 0)} % de lo normal`;
+    const u = P === 'GWETROOT' ? 'pts' : D.VARIABLES[P].unit;
+    return `${signed(o.diff, 1)} ${u}`;
+  }
+  function curLineHtml() {
+    const c = state.curA;
+    if (!c) return state.curLoading ? `<div class="cur-line muted-line"><span class="spinner dark"></span> Buscando datos diarios de ${new Date().getFullYear()}…</div>` : '';
+    const t = c.vars.T2M, p = c.vars.PRECTOTCORR;
+    const parts = [];
+    if (t) parts.push(`🌡️ ${curDiffTxt('T2M', t, 'ytd')}`);
+    if (p) parts.push(`🌧️ ${curDiffTxt('PRECTOTCORR', p, 'ytd')}`);
+    if (c.vars.GWETROOT) parts.push(`🌱 suelo ${curDiffTxt('GWETROOT', c.vars.GWETROOT, 'ytd')}`);
+    return `<button class="cur-line" data-goto-imp>📅 <span><b>${c.year} hasta ahora${c.mode === 'demo' ? ' (simulado)' : ''}:</b> ${parts.join(' · ')} frente al promedio ${state.res.y0}–${state.res.y1}</span> →</button>`;
+  }
+  function curSectionHtml() {
+    const c = state.curA, r = state.res;
+    if (!c) return state.curLoading ? `<div class="cur-box"><span class="spinner dark"></span> Buscando datos diarios de la NASA de ${new Date().getFullYear()}…</div>` : '';
+    const VARS = ['T2M', 'T2M_MAX', 'T2M_MIN', 'PRECTOTCORR', 'GWETROOT', 'RH2M'].filter(P => c.vars[P]);
+    const months = [...new Set(VARS.flatMap(P => c.vars[P].rows.map(x => x.m)))].sort((a, b) => a - b);
+    const cell = (P, row) => {
+      if (!row) return '<td class="hc na">·</td>';
+      const pal = PAL[D.VARIABLES[P].palette];
+      const zc = Math.max(-2.5, Math.min(2.5, row.z)) / 2.5;
+      const bg = mix('#f7f3ea', zc >= 0 ? pal.pos : pal.neg, Math.abs(zc));
+      const dd = P === 'GWETROOT' || P === 'RH2M' ? 0 : 1;
+      const shown = Math.abs(row.diff) < 0.5 * Math.pow(10, -dd) ? 0 : row.diff;
+      const txt = P === 'PRECTOTCORR' ? `${fmt(row.pct, 0)}%` : `${shown > 0 ? '+' : shown < 0 ? '−' : ''}${fmt(Math.abs(shown), dd)}`;
+      const dark = Math.abs(zc) > 0.55;
+      return `<td class="hc${row.partial ? ' part' : ''}" style="background:${bg};color:${dark ? '#fff' : 'var(--ink)'}" title="${esc(D.VARIABLES[P].name)} · ${IMP.MONTHS[row.m]} ${c.year}: ${fmt(row.v, 1)} (normal ${fmt(row.mean, 1)})${row.partial ? ' · mes incompleto' : ''}">${txt}</td>`;
+    };
+    const rowsHtml = VARS.map(P => {
+      const byM = Object.fromEntries(c.vars[P].rows.map(x => [x.m, x]));
+      return `<tr><th>${D.VARIABLES[P].icon} ${esc(D.VARIABLES[P].short)}</th>${months.map(m => cell(P, byM[m])).join('')}</tr>`;
+    }).join('');
+    const active = IMP.IMPACTS.map(I => ({ I, txt: IMP.nowSignal(I.id, c, fmt) })).filter(x => x.txt);
+    return `<div class="cur-box">
+      <div class="row"><h4 style="margin:0">📅 ${c.year} hasta ahora</h4><span class="place-meta">${c.mode === 'demo' ? 'SIMULADO' : `datos diarios NASA hasta ${fmtLastDate(c.lastDate)}`}</span></div>
+      <p class="place-meta" style="margin:4px 0 8px">Cada mes de ${c.year} comparado con el promedio de ese mes en ${r.y0}–${r.y1}. Colores intensos = muy distinto de lo normal.</p>
+      <div class="heat-wrap"><table class="heat"><thead><tr><th></th>${months.map(m => `<th>${IMP.MONTHS[m]}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table></div>
+      <p class="place-meta" style="margin-top:6px">Temperaturas: diferencia en °C · Lluvia: % de lo normal · Suelo y humedad del aire: diferencia en puntos. Borde punteado = mes incompleto.</p>
+      <div class="now-list"><span class="badge lvl3">Señales activas en ${c.year}</span>
+        ${active.length ? active.map(x => `<div class="now-item"><span>${x.I.icon}</span><div><b>${esc(x.I.title)}</b><br><span class="place-meta">${x.txt}</span></div></div>`).join('') : `<p class="place-meta" style="margin:6px 0 0">En los últimos meses, ninguna condición está fuera de lo normal como para activar una señal.</p>`}
+      </div>
+    </div>`;
   }
 
   /* ================= Comparar dos regiones ================= */
