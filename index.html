@@ -379,6 +379,42 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
   .gl-head { padding: 7px 10px; font-size: 11.5px; }
 }
 
+/* ---------- impactos ---------- */
+.imp-link { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1.5px solid var(--honey); background: var(--honey-soft); border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; cursor: pointer; font-size: 13.5px; }
+.imp-link span { flex: 1; }
+.imp-link:hover { background: #f8e2a8; }
+.imp-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.imp { background: #fff; border: 1px solid var(--line); border-radius: 12px; border-left: 5px solid #c9cfc9; }
+.imp-alta { border-left-color: var(--clay); }
+.imp-media { border-left-color: var(--honey); }
+.imp-baja { border-left-color: #b9c4a8; }
+.imp-menos { border-left-color: var(--sky); }
+.imp summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 11px 12px; cursor: pointer; }
+.imp summary::-webkit-details-marker { display: none; }
+.imp-ic { font-size: 22px; }
+.imp-t { flex: 1; display: flex; flex-direction: column; font-size: 14px; line-height: 1.3; }
+.imp-cat { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.lvb { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.lv-alta { background: #f9e1d7; color: #9a3a17; }
+.lv-media { background: #fbecc6; color: #7a5506; }
+.lv-baja { background: #eef1e6; color: #4f5b3a; }
+.lv-nula { background: #eceeea; color: #6b716c; }
+.lv-menos { background: #dce9f5; color: #1f5582; }
+.imp-body { padding: 0 13px 13px; font-size: 13.5px; display: flex; flex-direction: column; gap: 9px; }
+.imp-body p { margin: 0; }
+.imp-extra { background: #fbf7ee; border-radius: 8px; padding: 7px 9px; }
+.imp-ts { display: flex; flex-direction: column; gap: 2px; }
+.spark.big { width: 100%; height: 44px; color: var(--muted); }
+.drvs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.drv { font-size: 11.5px; padding: 3px 8px; border-radius: 8px; background: #f1f1ed; color: #6b716c; }
+.drv.on { background: #e5f1e9; color: #22613d; font-weight: 600; }
+.drv.half { background: #f6ead0; color: #7a5506; }
+.imp-act ul { margin: 5px 0 0; padding-left: 18px; }
+.imp-act li { margin: 3px 0; }
+.imp-body .btn { align-self: flex-start; }
+.imp-none { margin-top: 14px; }
+.imp-none > summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 13.5px; }
+
 </style>
 </head>
 <body>
@@ -447,6 +483,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 
     <nav class="tabs" role="tablist">
       <button class="tab on" data-tab="detector" role="tab">Detector</button>
+      <button class="tab" data-tab="impactos" role="tab">Impactos</button>
       <button class="tab" data-tab="variable" role="tab">Variable</button>
       <button class="tab" data-tab="comparar" role="tab">Comparar</button>
       <button class="tab" data-tab="donde" role="tab">¿Dónde?</button>
@@ -464,6 +501,14 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
             <p><b>¿Qué está cambiando en tu territorio?</b><br>Elegí un lugar en el mapa. Eiru revisa 8 variables de la NASA y te dice cuáles cambian, cuánto y si el cambio es significativo.</p>
           </div>
         </div>
+      </section>
+
+      <!-- IMPACTOS -->
+      <section class="pane" id="pane-impactos">
+        <h3>¿Qué significa para mí?</h3>
+        <p class="lead">Eiru traduce las tendencias de la NASA en señales de riesgo para desastres naturales, salud, agro, bosque y agua, con acciones concretas. Elegí un perfil:</p>
+        <div class="chips" id="impCats"></div>
+        <div id="impOut"><p class="lead" style="margin-top:12px">Primero tocá <b>Detectar cambios</b>.</p></div>
       </section>
 
       <!-- VARIABLE -->
@@ -559,7 +604,16 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 </ol>
 <div class="explain"><b>¿Qué es el valor p?</b> Si en realidad no hubiera ninguna tendencia, el valor p es la probabilidad de ver un patrón igual de fuerte (o más) por puro azar. <b>No</b> es la probabilidad de que "no haya cambio". Eiru llama <b>significativo</b> a un valor p ajustado menor a 0,05, e <b>indicio</b> a un valor p original menor a 0,10 que no supera la corrección.</div>
 
-<h4>3. Cuatro niveles de información</h4>
+<h4>3. De la tendencia al impacto</h4>
+<p>La pestaña <b>Impactos</b> responde "¿y esto qué significa para mí?". Cada riesgo (sequía, olas de calor, incendios, inundaciones, dengue, golpe de calor, enfermedades de los cultivos, estrés del ganado, polinizadores, agua y más) combina las tendencias de las variables que lo favorecen, según relaciones conocidas:</p>
+<ul>
+  <li>Una tendencia <b>significativa</b> en la dirección que favorece el riesgo suma 2 puntos; un <b>indicio</b> suma 1. Cada variable tiene un peso según su importancia para ese riesgo.</li>
+  <li>Algunos riesgos suman contexto del clima actual: la temperatura media reciente (dengue), el índice de temperatura y humedad del mes más caluroso (ganado) o la anomalía de los últimos 5 años (olas de calor, inundaciones).</li>
+  <li>El puntaje se resume como <b>señal alta</b> (4 o más puntos), <b>media</b> (2,5 a 4), <b>baja</b> (más de 0) o <b>sin señal</b>. Cada tarjeta muestra la evidencia, la serie temporal y acciones de prevención.</li>
+</ul>
+<p>Son <b>hipótesis para priorizar la prevención</b>, no pronósticos. Por ejemplo, el riesgo real de dengue también depende de que estén presentes el mosquito y el virus, y los tornados o el granizo duran minutos u horas: los datos mensuales no pueden detectarlos.</p>
+
+<h4>4. Cuatro niveles de información</h4>
 <p>Eiru no mezcla lo que alguien vio con lo que se midió o se supone:</p>
 <div class="levels">
   <div><span class="badge lvl1">Nivel 1 · Observación</span> lo que reporta una persona.</div>
@@ -569,7 +623,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
 </div>
 <p>Una correlación no demuestra la causa. Las hipótesis son preguntas para investigar en el terreno, no diagnósticos.</p>
 
-<h4>4. Límites</h4>
+<h4>5. Límites</h4>
 <ul>
   <li>Una celda de ~55 km no describe un árbol, un lote ni un barrio. Cerca de la Triple Frontera, la celda incluye parte de Brasil y Argentina. Eiru la muestra completa en lugar de recortarla, para no aparentar una precisión municipal que el dato no tiene.</li>
   <li>Una tendencia histórica no es un pronóstico: no se debe extrapolar al futuro.</li>
@@ -579,7 +633,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
   <li>Pocas observaciones comunitarias en una zona pueden significar que hay pocos observadores, no pocas especies.</li>
 </ul>
 
-<h4>5. Visión futura</h4>
+<h4>6. Visión futura</h4>
 <p>El prototipo se concentra en una sola historia completa y verificable: detectar tendencias con rigor. A partir de ahí, Eiru puede crecer por etapas:</p>
 <ul>
   <li><b>Más resolución donde haga falta:</b> lluvia con <b>GPM IMERG</b> (~0,1°), vegetación con <b>MODIS</b> (250 m – 1 km), y <b>Landsat</b> (30 m) o <b>Sentinel-2</b> (10 m) para coberturas y parcelas. Cada capa con su escala real.</li>
@@ -589,7 +643,7 @@ code { background: #f0eadc; padding: 1px 5px; border-radius: 5px; font-size: 12p
   <li><b>Memoria viva:</b> árboles con nombre, un QR y un seguimiento verificado; registro de polinizadores; reportes de plagas con enfoque de Manejo Integrado de Plagas; y focos de calor satelitales, siempre separando lo confirmado de lo hipotético.</li>
 </ul>
 
-<h4>6. Sobre Eiru</h4>
+<h4>7. Sobre Eiru</h4>
 <p><b>Eiru</b> viene del guaraní <i>eiru</i>, la abeja: un símbolo de que las especies dependen unas de otras. La espiral del logo representa un crecimiento que vuelve cerca de su origen, pero en otro nivel. Eiru quiere ser una memoria viva de los ecosistemas: unir la escala humana (un lapacho llamado <i>Goku</i> que alguien cuida por diez años) con la escala del planeta.</p>
 <p class="motto">Sembramos conocimiento. Cultivamos futuro.</p>
 <p class="foot">Proyecto de Abrahan Duarte · NASA Space Apps Challenge 2026 · Ciudad del Este, Paraguay.<br>
@@ -1577,6 +1631,244 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   root.EiruCharts = { lineChart, barChart, sparkline, fmtNum, niceTicks };
 })(window);
 
+/* ===== Eiru · Impactos: de tendencias a riesgos y acciones =====
+   Cada impacto combina las tendencias (Mann-Kendall) de varias variables en una "señal".
+   Es una HIPÓTESIS basada en relaciones generales conocidas, no un pronóstico ni un diagnóstico. */
+(function (root) {
+  'use strict';
+
+  const CATS = {
+    desastres: { label: 'Desastres naturales', icon: '⚠️' },
+    salud: { label: 'Salud', icon: '🩺' },
+    agro: { label: 'Agro y ganadería', icon: '🌾' },
+    bosque: { label: 'Bosque y biodiversidad', icon: '🌳' },
+    agua: { label: 'Agua', icon: '💧' }
+  };
+
+  // t(P): +2 aumento significativo, +1 indicio de aumento, −1 / −2 al revés, 0 sin tendencia
+  // up(P) / down(P): solo la parte en esa dirección
+  const IMPACTS = [
+    /* ---------------- Desastres ---------------- */
+    {
+      id: 'sequia', cat: 'desastres', icon: '🏜️', title: 'Sequía agrícola',
+      drivers: [['GWETROOT', -1], ['PRECTOTCORR', -1], ['T2M_MAX', +1]], key: 'GWETROOT',
+      score: (h) => h.down('GWETROOT') + h.down('PRECTOTCORR') + 0.5 * h.up('T2M_MAX'),
+      why: 'Menos agua en el suelo y menos lluvia, con más calor que aumenta la evaporación.',
+      actions: ['Mantener el suelo cubierto (rastrojo, cultivos de cobertura) para conservar humedad.', 'Revisar la fecha de siembra según la humedad del suelo, no solo el calendario.', 'Elegir variedades tolerantes a la sequía y planificar reservas de agua.'],
+      basis: 'La humedad del suelo en la zona de raíces es el indicador más directo de sequía agrícola.'
+    },
+    {
+      id: 'calor', cat: 'desastres', icon: '🥵', title: 'Olas de calor',
+      drivers: [['T2M_MAX', +1], ['T2M_MIN', +1]], key: 'T2M_MAX',
+      score: (h) => h.up('T2M_MAX') + 0.5 * h.up('T2M_MIN') + (h.recent('T2M_MAX') > 0.5 ? 1 : 0),
+      why: 'Máximas más altas y noches más cálidas que no dejan recuperarse a personas, animales y plantas.',
+      actions: ['Planificar trabajos pesados al aire libre en las horas más frescas.', 'Asegurar sombra y agua para personas y animales.', 'Seguir las alertas de la Dirección de Meteorología e Hidrología (DMH).'],
+      basis: 'Una tendencia al alza en las máximas aumenta la probabilidad de días extremos.'
+    },
+    {
+      id: 'incendios', cat: 'desastres', icon: '🔥', title: 'Incendios forestales y de pastizales',
+      drivers: [['T2M_MAX', +1], ['RH2M', -1], ['GWETROOT', -1], ['PRECTOTCORR', -1], ['WS2M', +1]], key: 'RH2M',
+      score: (h) => 0.8 * h.up('T2M_MAX') + h.down('RH2M') + 0.6 * h.down('GWETROOT') + 0.5 * h.down('PRECTOTCORR') + 0.4 * h.up('WS2M'),
+      why: 'Calor, aire seco, vegetación con menos agua y viento: la combinación que facilita que el fuego se inicie y se propague.',
+      actions: ['Evitar quemas en épocas secas y respetar las prohibiciones vigentes.', 'Hacer cortafuegos y limpiar la vegetación seca alrededor de casas y galpones.', 'Comparar con los focos de calor satelitales (NASA FIRMS) y avisar a bomberos ante humo.'],
+      basis: 'Las condiciones de calor y sequedad son las mismas que usan los índices de peligro de incendio.'
+    },
+    {
+      id: 'inundaciones', cat: 'desastres', icon: '🌊', title: 'Inundaciones y anegamientos',
+      drivers: [['PRECTOTCORR', +1], ['GWETROOT', +1]], key: 'PRECTOTCORR',
+      score: (h) => h.up('PRECTOTCORR') + 0.6 * h.up('GWETROOT') + (h.recent('PRECTOTCORR') > 0.7 ? 0.7 : 0),
+      why: 'Más lluvia sobre suelos ya húmedos: el agua no se infiltra y escurre o se acumula.',
+      actions: ['Revisar desagües, cunetas y zonas bajas antes de la temporada de lluvias.', 'Evitar construir o acopiar en áreas que se anegan.', 'Proteger el suelo de la erosión con cobertura y curvas de nivel.'],
+      basis: 'Totales de lluvia en aumento elevan el riesgo de excesos hídricos, sobre todo en zonas bajas.'
+    },
+    {
+      id: 'tormentas', cat: 'desastres', icon: '⛈️', title: 'Tormentas severas y granizo (señal indirecta)',
+      drivers: [['T2M', +1], ['RH2M', +1], ['PRECTOTCORR', +1]], key: 'T2M',
+      score: (h) => 0.5 * h.up('T2M') + 0.5 * h.up('RH2M') + 0.5 * h.up('PRECTOTCORR'),
+      why: 'Más calor y humedad aportan más energía a la atmósfera. Pero tormentas, granizo y tornados son eventos de minutos u horas que los datos mensuales no pueden detectar.',
+      actions: ['Seguir los avisos de tormenta de la DMH: esta señal no reemplaza un pronóstico.', 'Revisar techos, anclajes y seguros agrícolas contra granizo.'],
+      basis: 'Señal de contexto solamente. Eiru no detecta ni predice tornados.'
+    },
+    {
+      id: 'heladas', cat: 'desastres', icon: '🧊', title: 'Heladas',
+      drivers: [['T2M_MIN', -1]], key: 'T2M_MIN', reversible: true,
+      score: (h) => h.down('T2M_MIN'),
+      lowerScore: (h) => h.up('T2M_MIN'),
+      lowerText: 'Las mínimas suben: el riesgo de heladas tendería a bajar, aunque una helada fuerte sigue siendo posible en un año puntual.',
+      why: 'Mínimas más bajas aumentan la probabilidad de heladas que dañan cultivos y pasturas.',
+      actions: ['Ajustar fechas de siembra de cultivos sensibles.', 'Proteger plantines y frutales en noches frías.'],
+      basis: 'La tendencia de las mínimas indica si las heladas se vuelven más o menos probables.'
+    },
+
+    /* ---------------- Salud ---------------- */
+    {
+      id: 'dengue', cat: 'salud', icon: '🦟', title: 'Dengue, chikungunya y zika',
+      drivers: [['T2M', +1], ['PRECTOTCORR', +1], ['RH2M', +1]], key: 'T2M',
+      score: (h) => h.up('T2M') + 0.5 * h.up('PRECTOTCORR') + 0.5 * h.up('RH2M') + (h.level('T2M') >= 20 ? 1 : 0),
+      extra: (h) => `Temperatura media reciente: <b>${h.fmtLevel('T2M')}</b>. El mosquito <i>Aedes aegypti</i> se reproduce y transmite mejor con calor (aprox. 25–30 °C) y agua estancada.`,
+      why: 'Más calor acelera el ciclo del mosquito y del virus; la lluvia y la humedad crean criaderos. Ojo: en sequía también aumenta el riesgo si se guarda agua en recipientes destapados.',
+      actions: ['Eliminar criaderos: vaciar, tapar o dar vuelta recipientes con agua cada semana.', 'Usar repelente y mosquiteros, sobre todo en temporada de calor y lluvia.', 'Ante fiebre alta, dolor de cuerpo o detrás de los ojos: consultar al servicio de salud y no automedicarse.'],
+      basis: 'Relación general entre clima y Aedes aegypti. El riesgo real depende también de la presencia del mosquito y del virus, que estos datos no miden.'
+    },
+    {
+      id: 'golpe', cat: 'salud', icon: '🌡️', title: 'Golpe de calor y personas con medicación',
+      drivers: [['T2M_MAX', +1], ['T2M_MIN', +1], ['RH2M', +1]], key: 'T2M_MAX',
+      score: (h) => h.up('T2M_MAX') + 0.5 * h.up('T2M_MIN') + 0.3 * h.up('RH2M') + (h.level('T2M_MAX') >= 30 ? 0.7 : 0),
+      extra: (h) => `Temperatura máxima promedio reciente: <b>${h.fmtLevel('T2M_MAX')}</b>.`,
+      why: 'Con calor el cuerpo pierde agua y sales. Adultos mayores, niños, embarazadas, trabajadores al sol y personas que toman ciertos medicamentos (por ejemplo diuréticos, algunos antihipertensivos o psicofármacos) tienen más riesgo de deshidratación, mareos y desmayos.',
+      actions: ['Hidratarse seguido aunque no haya sed; evitar el sol fuerte del mediodía.', 'Quien toma medicación crónica: consultar al médico cómo cuidarse en días de calor. No suspender medicamentos por cuenta propia.', 'Estar atentos a vecinos mayores o que viven solos.'],
+      basis: 'Más días calurosos aumentan los riesgos para la salud por calor; algunos medicamentos afectan la regulación de la temperatura y la hidratación.'
+    },
+    {
+      id: 'humo', cat: 'salud', icon: '😮‍💨', title: 'Problemas respiratorios por humo y polvo',
+      drivers: [['RH2M', -1], ['PRECTOTCORR', -1], ['T2M_MAX', +1], ['WS2M', +1]], key: 'RH2M',
+      score: (h) => h.down('RH2M') + 0.6 * h.down('PRECTOTCORR') + 0.5 * h.up('T2M_MAX') + 0.3 * h.up('WS2M'),
+      why: 'Épocas más secas traen más quemas, humo y polvo en suspensión, que empeoran el asma y otras enfermedades respiratorias.',
+      actions: ['En días de humo, cerrar ventanas y reducir la actividad física al aire libre.', 'Personas con asma o EPOC: tener a mano su tratamiento y consultar si empeoran.'],
+      basis: 'Hipótesis ligada al riesgo de incendios; la calidad del aire real se mide con otros sensores.'
+    },
+    {
+      id: 'agua_salud', cat: 'salud', icon: '🚰', title: 'Leptospirosis y enfermedades transmitidas por agua',
+      drivers: [['PRECTOTCORR', +1], ['T2M', +1]], key: 'PRECTOTCORR',
+      score: (h) => h.up('PRECTOTCORR') + 0.4 * h.up('T2M'),
+      why: 'Las inundaciones mezclan agua con orina de roedores (leptospirosis) y contaminan pozos; el calor hace que los alimentos se descompongan más rápido (diarreas).',
+      actions: ['Después de inundaciones, evitar caminar descalzo en el agua y el barro.', 'Hervir o clorar el agua de pozo si hubo anegamiento.', 'Mantener los alimentos refrigerados en días de calor.'],
+      basis: 'Relación general entre exceso de lluvia, calor y enfermedades de origen hídrico.'
+    },
+
+    /* ---------------- Agro ---------------- */
+    {
+      id: 'estres_hidrico', cat: 'agro', icon: '🌱', title: 'Estrés hídrico en soja y maíz',
+      drivers: [['GWETROOT', -1], ['T2M_MAX', +1], ['PRECTOTCORR', -1]], key: 'GWETROOT',
+      score: (h) => 1.2 * h.down('GWETROOT') + 0.6 * h.up('T2M_MAX') + 0.5 * h.down('PRECTOTCORR'),
+      extra: (h) => `Humedad del suelo reciente: <b>${h.fmtLevel('GWETROOT')}</b> de saturación.`,
+      why: 'Menos agua disponible para las raíces en etapas críticas (floración y llenado de granos) reduce el rendimiento.',
+      actions: ['Siembra directa y cobertura permanente para guardar humedad.', 'Escalonar fechas de siembra y diversificar cultivos.', 'Monitorear la humedad del suelo antes de decidir siembras e insumos.'],
+      basis: 'La soja y el maíz son más sensibles a la falta de agua en floración y llenado de granos.'
+    },
+    {
+      id: 'estres_termico', cat: 'agro', icon: '🌼', title: 'Calor en floración (aborto de flores)',
+      drivers: [['T2M_MAX', +1]], key: 'T2M_MAX',
+      score: (h) => h.up('T2M_MAX') + (h.level('T2M_MAX') >= 30 ? 0.7 : 0),
+      why: 'Temperaturas muy altas durante la floración (por encima de unos 35 °C) pueden provocar caída de flores y menos granos.',
+      actions: ['Ubicar la floración fuera de los meses más calurosos ajustando la fecha de siembra.', 'Preferir materiales con tolerancia al calor.'],
+      basis: 'Relación agronómica general entre calor extremo y fecundación.'
+    },
+    {
+      id: 'roya', cat: 'agro', icon: '🍂', title: 'Enfermedades fúngicas (como la roya de la soja)',
+      drivers: [['RH2M', +1], ['PRECTOTCORR', +1]], key: 'RH2M',
+      score: (h) => h.up('RH2M') + h.up('PRECTOTCORR') + 0.3 * h.down('T2M_MAX'),
+      why: 'Los hongos como la roya asiática de la soja necesitan hojas mojadas y alta humedad, con temperaturas templadas.',
+      actions: ['Monitorear los lotes y seguir los avisos de alerta de roya.', 'Aplicar fungicidas según umbrales y recomendación técnica, no por calendario.', 'Rotar cultivos y eliminar plantas voluntarias que mantienen el hongo.'],
+      basis: 'La humedad y el agua libre sobre las hojas favorecen la infección por hongos.'
+    },
+    {
+      id: 'plagas', cat: 'agro', icon: '🐛', title: 'Plagas favorecidas por calor y sequía',
+      drivers: [['T2M_MAX', +1], ['GWETROOT', -1], ['RH2M', -1]], key: 'T2M_MAX',
+      score: (h) => h.up('T2M_MAX') + 0.6 * h.down('GWETROOT') + 0.4 * h.down('RH2M'),
+      why: 'Ácaros (arañuela), trips y algunas chinches se multiplican más rápido con calor y ambiente seco.',
+      actions: ['Monitoreo frecuente con Manejo Integrado de Plagas (MIP).', 'Conservar enemigos naturales: evitar insecticidas de amplio espectro sin necesidad.'],
+      basis: 'El calor acelera el ciclo de vida de muchos insectos y ácaros.'
+    },
+    {
+      id: 'ganado', cat: 'agro', icon: '🐄', title: 'Estrés por calor en el ganado',
+      drivers: [['T2M_MAX', +1], ['RH2M', +1]], key: 'T2M_MAX',
+      score: (h) => h.up('T2M_MAX') + 0.4 * h.up('RH2M') + (h.thi() >= 79 ? 1 : h.thi() >= 72 ? 0.5 : 0),
+      extra: (h) => { const t = h.thi(); return isFinite(t) ? `Índice de temperatura y humedad (ITH) del mes más caluroso, con las máximas de ${h.recentLabel()}: <b>${h.fmt(t, 0)}</b> → ${t >= 89 ? 'estrés severo' : t >= 79 ? 'estrés moderado' : t >= 72 ? 'estrés leve' : 'sin estrés'}.` : ''; },
+      why: 'Con calor y humedad las vacas comen menos y producen menos leche y carne; también baja la fertilidad.',
+      actions: ['Sombra (árboles o media sombra) y agua fresca abundante.', 'Manejo y traslados en horas frescas.', 'Sistemas silvopastoriles: árboles nativos en los potreros.'],
+      basis: 'ITH = (1,8T + 32) − (0,55 − 0,0055·HR)(1,8T − 26). Desde 72 empieza el estrés en bovinos.'
+    },
+
+    /* ---------------- Bosque y biodiversidad ---------------- */
+    {
+      id: 'arboles', cat: 'bosque', icon: '🌳', title: 'Estrés de árboles jóvenes y reforestaciones',
+      drivers: [['GWETROOT', -1], ['T2M_MAX', +1]], key: 'GWETROOT',
+      score: (h) => h.down('GWETROOT') + 0.6 * h.up('T2M_MAX') + 0.4 * h.down('PRECTOTCORR'),
+      why: 'Los plantines tienen raíces cortas: son los primeros en sufrir cuando baja la humedad del suelo.',
+      actions: ['Plantar al inicio de la temporada de lluvias y usar mantillo (mulch).', 'Elegir especies nativas adaptadas (por ejemplo lapacho, timbó, guatambú).', 'Registrar en Eiru el estado de cada árbol para comprobarlo en el terreno.'],
+      basis: 'Hipótesis a verificar con las observaciones comunitarias de árboles.'
+    },
+    {
+      id: 'polinizadores', cat: 'bosque', icon: '🐝', title: 'Polinizadores y floración',
+      drivers: [['T2M_MAX', +1], ['T2M', +1], ['PRECTOTCORR', -1]], key: 'T2M',
+      score: (h) => 0.7 * h.up('T2M_MAX') + 0.7 * h.up('T2M') + 0.5 * Math.abs(h.t('PRECTOTCORR')),
+      why: 'El calor puede adelantar la floración y desfasarla de la actividad de las abejas; el calor extremo también estresa a las colonias, como las de jateí y otras abejas nativas.',
+      actions: ['Registrar fechas de floración y visitas de abejas año tras año.', 'Mantener flores nativas y agua cerca de colmenas y meliponarios.', 'Evitar aplicar insecticidas en horas de vuelo de las abejas.'],
+      basis: 'Relación general entre temperatura, fenología y polinizadores.'
+    },
+
+    /* ---------------- Agua ---------------- */
+    {
+      id: 'agua', cat: 'agua', icon: '💧', title: 'Menos agua disponible (ríos, pozos y arroyos)',
+      drivers: [['PRECTOTCORR', -1], ['GWETROOT', -1]], key: 'PRECTOTCORR',
+      score: (h) => h.down('PRECTOTCORR') + 0.7 * h.down('GWETROOT') + 0.3 * h.up('T2M_MAX'),
+      why: 'Menos lluvia y suelos más secos significan menos recarga de acuíferos y arroyos, y bajantes de ríos.',
+      actions: ['Cuidar nacientes y bosques en las orillas, que regulan el agua.', 'Cosecha de agua de lluvia y uso eficiente del riego.'],
+      basis: 'Una celda de ~55 km no representa toda una cuenca: es una señal local.'
+    }
+  ];
+
+  function levelOf(score) {
+    if (score >= 4) return { k: 'alta', label: 'Señal alta' };
+    if (score >= 2.5) return { k: 'media', label: 'Señal media' };
+    if (score > 0) return { k: 'baja', label: 'Señal baja' };
+    return { k: 'nula', label: 'Sin señal' };
+  }
+
+  /** Helpers para las reglas a partir del análisis de Eiru. */
+  function makeHelpers(res, VARIABLES, fmt) {
+    const an = res.an, params = res.series.params;
+    const t = (P) => { const a = an[P]; if (!a) return 0; const w = a.status === 'sig' ? 2 : a.status === 'weak' ? 1 : 0; return w * (a.dir || 0); };
+    const unit = (P) => P === 'PRECTOTCORR' ? 'mm/año' : VARIABLES[P].unit;
+    const h = {
+      t,
+      up: (P) => Math.max(0, t(P)),
+      down: (P) => Math.max(0, -t(P)),
+      level: (P) => an[P] ? an[P].decades.b : NaN,
+      fmt: (v, d) => fmt(v, d),
+      fmtLevel: (P) => `${fmt(an[P].decades.b, VARIABLES[P].decimals - 1)} ${VARIABLES[P].unit === '% sat.' ? '%' : unit(P)}`,
+      recentLabel: () => an.T2M ? an.T2M.decades.bLbl : '',
+      // anomalía de los últimos 5 años frente al promedio del período, en unidades de variabilidad
+      recent: (P) => {
+        const a = an[P], d = params[P]; if (!a || !d) return 0;
+        const vals = d.annual.filter(v => v != null).slice(-5);
+        if (!vals.length || !(a.noise > 0)) return 0;
+        return (vals.reduce((x, y) => x + y, 0) / vals.length - a.meanAll) / a.noise;
+      },
+      // ITH del mes más caluroso (promedio de máximas y humedad de la última década)
+      thi: () => {
+        const tm = params.T2M_MAX, rh = params.RH2M; if (!tm || !rh) return NaN;
+        const lastY = Math.max(...tm.years.filter((y, i) => tm.annual[i] != null));
+        const y0 = lastY - 9; let best = -Infinity;
+        for (let m = 0; m < 12; m++) {
+          const T = tm.monthly.filter(q => q.m === m && q.y >= y0 && q.v != null).map(q => q.v);
+          const H = rh.monthly.filter(q => q.m === m && q.y >= y0 && q.v != null).map(q => q.v);
+          if (!T.length || !H.length) continue;
+          const tt = T.reduce((x, y) => x + y, 0) / T.length, hh = H.reduce((x, y) => x + y, 0) / H.length;
+          const ith = (1.8 * tt + 32) - (0.55 - 0.0055 * hh) * (1.8 * tt - 26);
+          if (ith > best) best = ith;
+        }
+        return best;
+      }
+    };
+    return h;
+  }
+
+  function evaluate(res, VARIABLES, fmt) {
+    const h = makeHelpers(res, VARIABLES, fmt);
+    return IMPACTS.map(I => {
+      let score = Math.max(0, I.score(h));
+      let lower = false;
+      if (I.reversible && score === 0 && I.lowerScore && I.lowerScore(h) > 0) lower = true;
+      const lv = lower ? { k: 'menos', label: 'Riesgo en baja' } : levelOf(score);
+      return { ...I, scoreVal: score, lv, lower, extraHtml: I.extra ? I.extra(h) : '', h };
+    }).sort((a, b) => b.scoreVal - a.scoreVal);
+  }
+
+  root.EiruImpacts = { CATS, IMPACTS, evaluate };
+})(window);
+
 /* ===== Eiru · Aplicación ===== */
 (function () {
   'use strict';
@@ -1617,7 +1909,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     res: null, varSel: 'T2M', chartMode: 'annual',
     grid: null, base: 'sat', ndvi: null,
     obs: [], draft: null, placing: false,
-    tab: 'detector', runToken: 0, gridToken: 0, cmp: null, cmpVar: 'T2M', cmpToken: 0
+    tab: 'detector', impCat: 'todos', runToken: 0, gridToken: 0, cmp: null, cmpVar: 'T2M', cmpToken: 0
   };
 
   /* ================= utilidades UI ================= */
@@ -1872,6 +2164,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       state.res = { series, an: analyse(series), mode: series.mode, cell: series.cell, place: { ...state.place }, y0: series.y0, y1: series.y1 };
       setMode(series.mode);
       renderDetector();
+      renderImpacts();
       renderVariable();
       renderObsList();
       setHint();
@@ -1909,6 +2202,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     let html = `<div class="summary"><div class="big">${nsig === 0 ? 'No se detectan cambios significativos' : `${nsig} de ${D.VAR_KEYS.length} variables cambian de forma significativa`}</div>
       <div class="small">${esc(r.place.name)} · ${r.y0}–${r.y1}${nweak ? ` · ${nweak} con indicio débil` : ''}<br>Datos: ${modeTxt}<br>Significancia corregida por analizar 8 variables a la vez (Benjamini-Hochberg).</div></div>`;
     if (!samePlace) html += `<div class="banner info"><span>ℹ️</span><div>El punto elegido está en la misma celda de datos que el análisis anterior, así que los resultados son los mismos.</div></div>`;
+    html += `<button class="imp-link" data-goto-imp>🩺🌾⚠️ <span><b>¿Qué significa para mí?</b> Ver riesgos para salud, agro y desastres naturales</span> →</button>`;
     html += `<div class="cards">`;
     for (const P of order) {
       const v = D.VARIABLES[P], a = an[P], pal = PAL[v.palette];
@@ -1926,6 +2220,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
     html += readingHtml();
     html += `<p class="foot">Toca una variable para ver su detalle. ${r.mode !== 'demo' ? `<a href="${esc(D.sourceUrl(r.cell.lat, r.cell.lon, D.VAR_KEYS, r.y0, r.y1))}" target="_blank" rel="noopener">Ver los datos originales de la NASA (CSV)</a>` : ''}</p>`;
     $('#detOut').innerHTML = html;
+    const gi = $('#detOut [data-goto-imp]'); if (gi) gi.onclick = () => goTab('impactos');
     $$('#detOut .vcard').forEach(b => b.onclick = () => { state.varSel = b.dataset.var; $('#varSel').value = state.varSel; $('#gridVar').value = state.varSel; renderVariable(); goTab('variable'); });
   }
 
@@ -2392,6 +2687,55 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
       });
   };
 
+  /* ================= Impactos ================= */
+  const IMP = window.EiruImpacts;
+  function renderImpCats() {
+    const cats = [['todos', '✨', 'Todos']].concat(Object.entries(IMP.CATS).map(([k, c]) => [k, c.icon, c.label]));
+    $('#impCats').innerHTML = cats.map(([k, ic, l]) => `<button class="chip ${state.impCat === k ? 'on' : ''}" data-c="${k}">${ic} ${esc(l)}</button>`).join('');
+    $$('#impCats .chip').forEach(b => b.onclick = () => { state.impCat = b.dataset.c; renderImpCats(); renderImpacts(); });
+  }
+  function driverChip(P, wantDir) {
+    const r = state.res, a = r.an[P], v = D.VARIABLES[P];
+    const arrow = a.dir > 0 ? '▲' : a.dir < 0 ? '▼' : '•';
+    const matches = a.status !== 'none' && Math.sign(a.dir) === Math.sign(wantDir);
+    const st = a.status === 'sig' ? '✓ signif.' : a.status === 'weak' ? '~ indicio' : 'sin tendencia';
+    return `<span class="drv ${matches ? (a.status === 'sig' ? 'on' : 'half') : ''}">${v.icon} ${esc(v.short)} ${arrow} ${signed(a.mk.slope * 10, dec(P, 1))} ${unitAnnual(P)}/déc · ${st}</span>`;
+  }
+  function renderImpacts() {
+    const r = state.res; if (!r) return;
+    const list = IMP.evaluate(r, D.VARIABLES, fmt);
+    const shown = list.filter(I => state.impCat === 'todos' || I.cat === state.impCat);
+    const active = shown.filter(I => I.lv.k !== 'nula');
+    const none = shown.filter(I => I.lv.k === 'nula');
+    const top = list.filter(I => ['alta', 'media'].includes(I.lv.k)).slice(0, 3);
+    const card = (I) => {
+      const v = D.VARIABLES[I.key], a = r.an[I.key], d = r.series.params[I.key];
+      const pal = PAL[v.palette], col = a.dir >= 0 ? pal.pos : pal.neg;
+      const tr = isFinite(a.mk.slope) ? [a.mk.intercept + a.mk.slope * d.years[0], a.mk.intercept + a.mk.slope * d.years[d.years.length - 1]] : null;
+      return `<details class="imp imp-${I.lv.k}" ${I.lv.k === 'alta' ? 'open' : ''}>
+        <summary><span class="imp-ic">${I.icon}</span><span class="imp-t"><b>${esc(I.title)}</b><span class="imp-cat">${IMP.CATS[I.cat].icon} ${esc(IMP.CATS[I.cat].label)}</span></span><span class="lvb lv-${I.lv.k}">${I.lv.label}</span></summary>
+        <div class="imp-body">
+          <p>${I.lower ? esc(I.lowerText) : esc(I.why)}</p>
+          ${I.extraHtml ? `<p class="imp-extra">${I.extraHtml}</p>` : ''}
+          <div class="imp-ts"><span class="place-meta">Serie temporal: ${esc(v.name.toLowerCase())} (${r.y0}–${r.y1})</span>${Ch.sparkline(d.annual, col, a.status !== 'none' ? tr : null).replace('class="spark"', 'class="spark big"')}</div>
+          <div class="imp-ev"><span class="badge lvl3">Evidencia (tendencias NASA)</span><div class="drvs">${I.drivers.map(([P, dir]) => driverChip(P, dir)).join('')}</div></div>
+          <div class="imp-act"><span class="badge lvl4">Qué se puede hacer</span><ul>${I.actions.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+          <p class="place-meta">${esc(I.basis)}</p>
+          <button class="btn small" data-var="${I.key}">📈 Ver la serie de ${esc(v.short.toLowerCase())}</button>
+        </div>
+      </details>`;
+    };
+    $('#impOut').innerHTML = `
+      ${r.mode === 'demo' ? '<div class="banner demo" style="margin-top:12px"><span>⚠️</span><div><b>Datos simulados</b>Solo para demostración.</div></div>' : ''}
+      <div class="summary" style="margin-top:12px"><div class="big">${top.length ? `Señales más fuertes en ${esc(r.place.name)}` : `Sin señales fuertes en ${esc(r.place.name)}`}</div>
+        <div class="small">${top.length ? top.map(I => `${I.icon} ${esc(I.title)} (${I.lv.label.replace('Señal ', '')})`).join(' · ') : 'Ninguna combinación de tendencias es significativa en este período.'}<br>Basado en las tendencias de ${r.y0}–${r.y1} en la celda de datos (~55 × 63 km).</div></div>
+      <div class="banner info"><span>🧭</span><div><b>Son hipótesis, no pronósticos</b>Cada señal combina las tendencias de varias variables según relaciones conocidas. Sirve para priorizar qué vigilar y prevenir. No reemplaza los avisos de la DMH, ni al médico, ni al técnico agrónomo.</div></div>
+      <div class="imp-list">${active.map(card).join('') || '<p class="place-meta">No hay señales en esta categoría para este lugar y período.</p>'}</div>
+      ${none.length ? `<details class="imp-none"><summary>Otros riesgos sin señal aquí (${none.length})</summary><div class="imp-list">${none.map(card).join('')}</div></details>` : ''}
+      <p class="foot">Las señales cambian si elegís otro lugar o período. Probá comparar Ciudad del Este con el Chaco.</p>`;
+    $$('#impOut [data-var]').forEach(b => b.onclick = () => { state.varSel = b.dataset.var; $('#varSel').value = state.varSel; $('#gridVar').value = state.varSel; renderVariable(); goTab('variable'); });
+  }
+
   /* ================= Comparar dos regiones ================= */
   function renderCmpHeader() {
     $('#cmpAName').textContent = state.place.name;
@@ -2506,7 +2850,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   }
 
   /* ================= pestañas ================= */
-  const TABS = ['detector', 'variable', 'comparar', 'donde', 'comunidad', 'metodo'];
+  const TABS = ['detector', 'impactos', 'variable', 'comparar', 'donde', 'comunidad', 'metodo'];
   function goTab(t, noHash) {
     if (!TABS.includes(t)) t = 'detector';
     state.tab = t;
@@ -2541,6 +2885,7 @@ Referencias: Mann (1945); Kendall (1975); Sen (1968); Gilbert (1987); Hamed y Ra
   renderPlace();
   renderObsList();
   renderCmpHeader();
+  renderImpCats();
   goTab(location.hash.slice(1) || 'detector', true);
   runDetector();
   window.__eiru = { state, map, runDetector, runGrid, goTab };
